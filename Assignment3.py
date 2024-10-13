@@ -18,3 +18,16 @@ from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.metrics import mean_absolute_error
 
 import joblib
+
+gold_prices = pd.read_csv('FINAL_USO.csv')
+
+def clean_dataset(data):
+    # Step 1: convert columns to datetime where possible, keep original value
+    for col in data.columns:
+        if data[col].dtype == 'object':
+            data[col] = pd.to_datetime(data[col])
+
+
+clean_dataset(gold_prices)
+
+gold_prices.info()
