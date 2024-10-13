@@ -24,8 +24,11 @@ gold_prices = pd.read_csv('FINAL_USO.csv')
 def clean_dataset(data):
     # Step 1: convert columns to datetime where possible, keep original value
     for col in data.columns:
-        if data[col].dtype == 'object':
-            data[col] = pd.to_datetime(data[col])
+        try:
+            data[col] = pd.to_numeric(data[col])
+        except:
+            data[col]=pd.to_datetime(data[col])
+
 
 
 clean_dataset(gold_prices)
