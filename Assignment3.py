@@ -20,8 +20,10 @@ from sklearn.metrics import mean_absolute_error
 import joblib
 
 gold_data = pd.read_csv('FINAL_USO.csv')
+
+# A function to clean the data by converting object columns to suitable data types
 def clean_dataset(data):
-    # Step 1: convert columns to datetime where possible, keep original value
+    # attempt to convert columns to numeric where possible, keep original value if not
     for col in data.select_dtypes(include=['object']).columns:
         try:
             data[col] = pd.to_numeric(data[col])
@@ -30,6 +32,7 @@ def clean_dataset(data):
         except:
             pass
 
+    # attempt to convert all remaining data types into datetime, and if not keep original value
     for col in data.select_dtypes(exclude=['int64', 'float64']).columns:
         try:
             data[col] = pd.to_datetime(data[col])
@@ -74,11 +77,25 @@ if uploaded_files:
     st.write('##Sample Data from the Selected Dataset')
     st.dataframe(cleaned_data.sample(5), use_container_width=True)
 
+    # This is what Pranav used, so don't know if we need it or not. From what I can tell we don't need it with our dataset
     # if "Unnamed: 0" in cleaned_data.columns:
     #     cleaned_data = cleaned_data.drop(columns=["Unnamed: 0"])
     #     st.write("Dropped 'Unnamed: 0' column from the dataset.")
 
+    # Show cleaned data
+    st.write('### Cleaned data types')
+    dtype_df = pd.DataFrame(cleaned_data.dtypes, columns=["data type"]).reset_index().rename(
+        columns={"index": "Column Name"})
+    st.dataframe(dtype_df, use_container_width=True)
+
+    # Show shape and columns of selected dataset
+    st.write('## Dataset Information')
+    st.write(f'## Shape: {cleaned_data.shape}')
+    st.write(f'Columns in the dataset: ', cleaned_data.columns.tolist())
+
+    target_variable = st.selectbox('Select the Target Variable:', options=list(cleaned_data.columns))
+    st.write(f"### Target Variable '{target_variable}'")
 
 
-# clean_dataset(gold_data)
-# print(gold_data.info())
+clean_dataset(gold_data)
+print(gold_data.info())
