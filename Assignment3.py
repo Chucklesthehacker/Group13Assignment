@@ -93,9 +93,26 @@ if uploaded_files:
     st.write(f'## Shape: {cleaned_data.shape}')
     st.write(f'Columns in the dataset: ', cleaned_data.columns.tolist())
 
+    # Select the Target Variable
     target_variable = st.selectbox('Select the Target Variable:', options=list(cleaned_data.columns))
     st.write(f"### Target Variable '{target_variable}'")
 
+    st.write("## Vizualizing the Target Variable")
 
-clean_dataset(gold_data)
-print(gold_data.info())
+    fig, ax = plt.subplots()
+    ax.hist(cleaned_data[target_variable], bins=50, edgecolor='black', alpha=0.5)
+    ax.set_title(f'Distribution of {target_variable}')
+    ax.set_xlabel(target_variable)
+    ax.set_ylabel('Frequency')
+    st.pyplot(fig)
+
+    comparison_columns = st.multiselect("Select Variables to compare: ", cleaned_data.columns)
+    if len(comparison_columns) > 1:
+        sns.pairplot(cleaned_data[comparison_columns])
+        plt.title('Pairplot of Selected Variables')
+        st.pyplot(plt.gcf())
+
+
+
+# clean_dataset(gold_data)
+# print(gold_data.info())
