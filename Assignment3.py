@@ -156,10 +156,8 @@ if uploaded_files:
         if col not in keeping_columns:
             cleaned_data = cleaned_data.drop(columns=[col])
             count = count+1
-    st.write(f"### Removed extra {count} columns")
-    st.write("### Remaining Variables: ")
-
-    st.write(cleaned_data.columns.tolist())
+    st.write(f"### Removed extra {count} variables")
+    st.write("Remaining Variables: ", cleaned_data.columns.tolist())
 
     st.write('### Outlier Analysis: ')
 
