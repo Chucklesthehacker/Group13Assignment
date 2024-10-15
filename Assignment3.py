@@ -394,5 +394,82 @@ if uploaded_files:
             joblib.dump(best_model, model_filename)
             st.write(f"Model '{best_model_mse}' has been retrained and saved as '{model_filename}'")
 
+        else:
+            st.write("No model performance results available. Please ensure (super)models were trained successfully")
 
+        # Step ???
+        st.write("## Step 15: Model Deployment - Predict Using Saved Model")
 
+        # Load saved model
+        model_filename = 'best_model.pkl'
+        try:
+            loaded_model = joblib.load(model_filename)
+            st.write(f"Model '{model_filename}' has been loaded successfully")
+
+            # Allow input of values for features
+            st.write("### Provide the input values for prediction")
+
+            # Generate input fields dynamically based on selected features
+            user_input_vales = {}
+            for feature in selected_features:
+                user_input_vales[feature] = st.number_input(f"enter value for {feature}",
+                                                            value=float(cleaned_data[feature].mean()))
+            if st.button("Predict"):
+                #Convert user input to dataframe
+                user_input_df = pd.DataFrame([user_input_vales])
+
+                # Scale the user inputs using the same scaler
+                user_input_scaled = scaler.transform(user_input_df)
+
+                # Make predictions using the loaded model
+                predicted_value = loaded_model.predict(user_input_scaled)
+
+                # Display the predicted value
+                st.write(f"### Predicted {target_variable}: {predicted_value[0]:.2f}")
+
+                fig,ax = plt.subplots()
+
+                feature_names = list(user_input_vales.keys())
+                feature_values = list(user_input_vales.values())
+
+                ax.bar(feature_names, feature_values, color="lavender", label='Feature Values')
+
+                ax.bar(['Predicted ' + target_variable],[predicted_value[0]], color='teal',
+                       label='Predicted Values')
+
+                ax.set_xlabel('Value')
+                ax.set_title(f"Input Features and Predicted {target_variable}")
+                ax.legend()
+
+                st.pyplot(fig)
+
+                fig,ax = plt.subplots(figsize=(14, 10))
+
+                copy_feature_name = feature_names.copy()
+                copy_feature_values = feature_values.copy()
+                # Add predicted value at the end
+                copy_feature_name.append(f"Predicted {target_variable}")
+                copy_feature_values.append(predicted_value[0])
+
+                ax.plot(copy_feature_name, copy_feature_values, color='purple', marker='o', linestyle='-',
+                        label='Features Predicted Values')
+
+                ax.set_xlabel('Features and Predicted value')
+                ax.set_ylabel('Values')
+                ax.set_title(f"Input Features and Predicted {target_variable}")
+                ax.grid(True)
+
+                for i,txt in enumerate(values):
+                    ax.annotate(f"{txt:.2f}", (copy_feature_name[i], copy_feature_values[i]),
+                                textcoords='offset points',
+                                xytext=(0,10), ha='center', )
+
+                st.pyplot(fig)
+
+        except FileNotFoundError:
+            st.write(f"Model '{model_filename}' does not exist. Please ensure 'twas save correctly milord")
+
+    else:
+        st.write("No numeric features selected for training")
+else:
+    st.write("PLease upload one or more CSV files from the sidebar to get started")
