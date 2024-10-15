@@ -52,6 +52,7 @@ def scale_data(X_train, X_test):
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
     return scaler, X_train_scaled, X_test_scaled
+
 # A function to clean the data by converting object columns to suitable data types
 def clean_dataset(data):
     # attempt to convert columns to numeric where possible, keep original value if not
@@ -280,13 +281,65 @@ if uploaded_files:
         st.write("No categorical available for ANOVA")
 
     # Step 10:
-    st.write("### Step 10: Selecting Final Predictors")
+    st.write("## Step 10: Selecting Final Predictors")
+    for columns in cleaned_data:
+        if columns in target_variable:
+            final_predictors = cleaned_data.drop(columns=[columns])
+
+
     # Ensure that numeric columns are selected
     selected_features = st.multiselect("Select predictor variables (independent variables):",
                                        cleaned_data.select_dtypes(include=['float64', 'int64']).columns)
     # exclude target variable
     st.write("### Selected Features: ", selected_features)
 
+
     if selected_features:
         st.write(f"### Target Variable: '{target_variable}'")
 
+        # step 11: data prep for machine learning
+        st.write('## Step11: Data Preparation for Machine Learning')
+
+        x = cleaned_data[selected_features]
+        y = cleaned_data[target_variable]
+
+        test_size = st.slider("Select the test size (percentage):",min_value=0.1, max_value=0.5, value=0.2, step=0.01)
+        X_train, X_test, Y_train, Y_test = train_test_split(x, y, test_size=test_size, random_state=42)
+
+        scaler, X_train_scaled, X_test_scaled = scale_data(X_train, X_test)
+
+        st.write("## Step 12: Model Training and Evaluation")
+
+        if 'trained_models' not in st.session_state:
+            st.session_state.trained_models = train_models(X_train_scaled, Y_train)
+
+        trained_models = st.session_state.trained_models
+
+        model_performance = {}
+        for name, model in trained_models.items():
+            model.fit(X_train_scaled, Y_train)
+            y_pred = model.predict(X_test_scaled)
+
+            mse = mean_squared_error(Y_test, y_pred)
+            r2 = r2_score(Y_test, y_pred)
+            mae = mean_absolute_error(Y_test, y_pred)
+
+            model_performance[name] = {"MSE": mse, "R2 Score": r2, "MAE": mae}
+
+        performance_df = pd.DataFrame(model_performance).T
+
+        styled_df = performance_df.style.format(precision=2)\
+            .background_gradient(subset=['MSE'], cmap="Purples", low=0, high=1) \
+            .background_gradient(subset=['R2 Score'], cmap="Greens", low=0, high=1) \
+            .background_gradient(subset=['MAE'], cmap="Oranges", low=0, high=1) \
+            .set_properties(**{'text-align': 'center'}) \
+            .set_table_styles([{
+            'selector': 'th',
+            'props': [('font-size', '14px'), ('text-align', 'center'), ('color', '#ffffff'),
+                      ('background-color', '#404040')]
+        }])
+
+        # Display the table with st.dataframe
+        st.write("## Model Performance Table")
+        st.dataframe(styled_df, use_container_width=True)
+        
