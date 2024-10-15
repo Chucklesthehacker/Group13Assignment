@@ -163,6 +163,6 @@ if uploaded_files:
     numeric_columns = cleaned_data.select_dtypes(include=['float64', 'int64'])
 
     if not numeric_columns.empty:
-        Q1 = cleaned_data[numeric_columns].quantile(0.25)
-        Q3 = cleaned_data[numeric_columns].quantile(0.75)
+        Q1 = numeric_columns.quantile(0.25)
+        Q3 = numeric_columns.quantile(0.75)
         IQR = Q3 - Q1
