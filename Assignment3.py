@@ -146,8 +146,6 @@ if uploaded_files:
             ax.set_ylabel('Frequency')
             st.pyplot(fig)
 
-    # This is what I'm working on ATM
-
     # Removing unnecessary columns
     st.write("### Remove extra columns")
     keeping_columns = st.multiselect("Select columns to keep:", cleaned_data.columns)
@@ -162,9 +160,9 @@ if uploaded_files:
     st.write('### Outlier Analysis: ')
 
 
-    # numeric_columns = cleaned_data.select_dtypes(include=['float64', 'int64'])
-    #
-    # if not numeric_columns.empty:
-    #     Q1 = cleaned_data[numeric_columns].quantile(0.25)
-    #     Q3 = cleaned_data[numeric_columns].quantile(0.75)
-    #     IQR = Q3 - Q1
+    numeric_columns = cleaned_data.select_dtypes(include=['float64', 'int64'])
+
+    if not numeric_columns.empty:
+        Q1 = cleaned_data[numeric_columns].quantile(0.25)
+        Q3 = cleaned_data[numeric_columns].quantile(0.75)
+        IQR = Q3 - Q1
