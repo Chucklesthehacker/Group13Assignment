@@ -30,7 +30,28 @@ low =0.75
 
 
 gold_data = pd.read_csv('FINAL_USO.csv')
+@st.cache_resource
+def train_models(X_train_scaled, y_train):
+    models = {
+        "Linear Regression": LinearRegression(),
+        "Decision Tree Regressor": DecisionTreeRegressor(),
+        "Random Forest Regressor": RandomForestRegressor(),
+        "KNN Regressor": KNeighborsRegressor(),
+        "SVM Regressor": SVR()
+    }
+    trained_models = {}
+    for name, model in models.items():
+        model.fit(X_train_scaled, y_train)
+        trained_models[name] = model
+    return trained_models
 
+
+@st.cache_resource
+def scale_data(X_train, X_test):
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
+    return scaler, X_train_scaled, X_test_scaled
 # A function to clean the data by converting object columns to suitable data types
 def clean_dataset(data):
     # attempt to convert columns to numeric where possible, keep original value if not
@@ -218,6 +239,7 @@ if uploaded_files:
 
     categorical_columns = cleaned_data.select_dtypes(exclude=['float64', 'int64'])
 
+# WE NEED TO COME BACK AND LOOKY AT THISSY IT WORKS BUT EHEHEHEHEH
     if not categorical_columns.empty:
         selected_categorical = st.multiselect("Select categorical variables for ANOVA: ", categorical_columns.columns)
 
@@ -250,3 +272,21 @@ if uploaded_files:
                     sns.boxplot(x=cat_col,y=target_variable, data=cleaned_data, ax=ax)
                     ax.set_title(f'{cat_col} vs {target_variable}')
                     st.pyplot(fig)
+            else:
+                st.write("No categorical variables selected for ANOVA")
+        else:
+            st.write("The target variable must be continuous for ANOVA analysis")
+    else:
+        st.write("No categorical available for ANOVA")
+
+    # Step 10:
+    st.write("### Step 10: Selecting Final Predictors")
+    # Ensure that numeric columns are selected
+    selected_features = st.multiselect("Select predictor variables (independent variables):",
+                                       cleaned_data.select_dtypes(include=['float64', 'int64']).columns)
+    # exclude target variable
+    st.write("### Selected Features: ", selected_features)
+
+    if selected_features:
+        st.write(f"### Target Variable: '{target_variable}'")
+
