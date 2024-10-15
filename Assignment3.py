@@ -19,10 +19,11 @@ from sklearn.metrics import mean_absolute_error
 
 import joblib
 
-# Features to add:
+# Features to add /things to check:
 #  Remove duplicate columns
 #  A high strength correlation matrix
 #  A genralized way to filter out boolean data
+#  Check the number of steps is correct
 
 # correlation strength variables
 high = 0.95
