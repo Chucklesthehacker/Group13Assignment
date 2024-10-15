@@ -24,6 +24,7 @@ import joblib
 #  A high strength correlation matrix
 #  A genralized way to filter out boolean data
 #  Check the number of steps is correct
+# remove the file selector, we know what file we want to use
 
 # correlation strength variables
 high = 0.95
