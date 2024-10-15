@@ -44,23 +44,11 @@ def clean_dataset(data):
     #         data[col] = data[col]
 
     data['Date'] = pd.to_datetime(data['Date'])
-
-
-    # attempt to convert numeric data types to boolean if applicable, otherwise keep original datatype
-    for col in data.select_dtypes(include=['int64', 'float64']).columns:
-        try:
-            data[col] = data[col].convert_dtypes()
-        except ValueError:
-            data[col] = data[col]
-
+    bool_variables = ['EU_Trend', 'OF_Trend','OS_Trend', 'SF_Trend', 'USB_Trend', 'PLT_Trend', 'PLD_Trend', 'USDI_Trend']
+    for variable in bool_variables:
+        data[variable] = data[variable].astype('bool')
     return data
 
-    # if col in data.columns.all() == 0:
-    #     data[col] = data[col].astype('bool')
-    # elif col in data.columns.all()  == 1:
-    #     data[col] = data[col].astype('bool')
-    # else:
-    #     data[col] = data[col]
 
 st.sidebar.title('Select Dataset(s)')
 uploaded_files = st.sidebar.file_uploader("Choose one or more CSV files", type=['csv'], accept_multiple_files=True)
@@ -160,8 +148,7 @@ if uploaded_files:
     # st.write(f"### Removed extra {count} variables")
     # st.write("Remaining Variables: ", cleaned_data.columns.tolist())
     # 
-    # st.write('### Outlier Analysis: ')
-
+    st.write('### Outlier Analysis: ')
 
     numeric_columns = cleaned_data.select_dtypes(include=['float64', 'int64'])
 
@@ -204,6 +191,26 @@ if uploaded_files:
         moderate_corr = target_correlations[(target_correlations.abs() <= 0.5) & (target_correlations.abs() < 0.95)]
         weak_corr = target_correlations[target_correlations.abs() < 0.5]
         
-        st.write(f"### Strong Correlations (|correlation| >= 0.7)")
+        st.write(f"### Strong Correlations (|correlation| >= {high})")
         st.dataframe(strong_corr, use_container_width=True)
-        
+
+        st.write(f"### Moderate Correlations ({low} <=|correlation| < {high})")
+        st.dataframe(moderate_corr, use_container_width=True)
+
+        st.write(f"### Weak Correlations (|correlation| <{low})")
+        st.dataframe(weak_corr, use_container_width=True)
+
+        # make new correlation heatmap for high correlation values ( make correlations great again)
+        # high_corr_columns = correlation_matrix.columns
+        # for column in correlation_matrix:
+        #     high_correlation = correlation_matrix[column].drop(columns=[column])
+        # fig, ax = plt.subplots(figsize=(14, 10))
+        # sns.heatmap(high_correlation, annot=True, ax=ax, cmap="coolwarm")
+        # st.pyplot(fig)
+    else:
+        st.write("No continuous numeric data for analysis.")
+
+    categorical_columns = cleaned_data.select_dtypes(exclude=['float64', 'int64'])
+
+    if not categorical_columns.empty:
+        selected_categorical = st.multiselect("Select categorical variables for ANOVA: ", categorical_columns.columns)
