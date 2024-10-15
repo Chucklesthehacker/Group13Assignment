@@ -21,6 +21,12 @@ import joblib
 
 # Features to add:
 #  Remove duplicate columns
+#  A high strength correlation matrix
+#  A genralized way to filter out boolean data
+
+# correlation strength variables
+high = 0.95
+low =0.75
 
 
 gold_data = pd.read_csv('FINAL_USO.csv')
@@ -187,9 +193,9 @@ if uploaded_files:
 
         st.write(f"### Correlation of Features with Target Variable: '{target_variable}'")
         
-        strong_corr = target_correlations[target_correlations.abs() >= 0.95]
-        moderate_corr = target_correlations[(target_correlations.abs() <= 0.5) & (target_correlations.abs() < 0.95)]
-        weak_corr = target_correlations[target_correlations.abs() < 0.5]
+        strong_corr = target_correlations[target_correlations.abs() >= high]
+        moderate_corr = target_correlations[(target_correlations.abs() >= low) & (target_correlations.abs() < high)]
+        weak_corr = target_correlations[target_correlations.abs() < low]
         
         st.write(f"### Strong Correlations (|correlation| >= {high})")
         st.dataframe(strong_corr, use_container_width=True)
@@ -214,3 +220,33 @@ if uploaded_files:
 
     if not categorical_columns.empty:
         selected_categorical = st.multiselect("Select categorical variables for ANOVA: ", categorical_columns.columns)
+
+        if pd.api.types.is_numeric_dtype(cleaned_data[target_variable]):
+            anova_results = []
+
+            for cat_col in selected_categorical:
+                anova_groups = cleaned_data.groupby(cat_col)[target_variable].apply(list)
+                f_val, p_val = stats.f_oneway(*anova_groups)
+
+                anova_results.append({"Categorical Variable": cat_col, "F-Value": f_val, "P-Value": p_val})
+
+            anova_df = pd.DataFrame(anova_results)
+
+            st.write("### ANOVA Results")
+            st.write("The following table shows F and P-values for each categorical variable.")
+            st.dataframe(anova_df, use_container_width=True)
+
+            if "P-Value" in anova_df.columns:
+                significant_vars = anova_df[anova_df["P-Value"] < 0.05]
+                st.write("### Significant Variables (P < 0.05):")
+                if not significant_vars.empty:
+                    st.dataframe(significant_vars, use_container_width=True)
+                else:
+                    st.write("No significant variables (P < 0.05) detected")
+
+                st.write("### Box Plot: Categorical Variable vs Target Variable")
+                for cat_col in selected_categorical:
+                    fig, ax = plt.subplots(figsize=(14, 10))
+                    sns.boxplot(x=cat_col,y=target_variable, data=cleaned_data, ax=ax)
+                    ax.set_title(f'{cat_col} vs {target_variable}')
+                    st.pyplot(fig)
