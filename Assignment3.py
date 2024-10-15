@@ -106,7 +106,7 @@ if uploaded_files:
     #     st.write("Dropped 'Unnamed: 0' column from the dataset.")
 
     # Show cleaned data
-    st.write('### Cleaned data types')
+    st.write('########### Cleaned data types')
     dtype_df = pd.DataFrame(cleaned_data.dtypes, columns=["data type"]).reset_index().rename(
         columns={"index": "Column Name"})
     st.dataframe(dtype_df, use_container_width=True)
@@ -289,7 +289,7 @@ if uploaded_files:
 
     # Ensure that numeric columns are selected
     selected_features = st.multiselect("Select predictor variables (independent variables):",
-                                       cleaned_data.select_dtypes(include=['float64', 'int64']).columns)
+                                       final_predictors.select_dtypes(include=['float64', 'int64']).columns)
     # exclude target variable
     st.write("### Selected Features: ", selected_features)
 
