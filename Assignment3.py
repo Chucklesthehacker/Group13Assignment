@@ -300,15 +300,15 @@ if uploaded_files:
         # step 11: data prep for machine learning
         st.write('## Step11: Data Preparation for Machine Learning')
 
-        x = cleaned_data[selected_features]
+        X = cleaned_data[selected_features]
         y = cleaned_data[target_variable]
 
         test_size = st.slider("Select the test size (percentage):",min_value=0.1, max_value=0.5, value=0.2, step=0.01)
-        X_train, X_test, Y_train, Y_test = train_test_split(x, y, test_size=test_size, random_state=42)
+        X_train, X_test, Y_train, Y_test = train_test_split(X, y, test_size=test_size, random_state=42)
 
         scaler, X_train_scaled, X_test_scaled = scale_data(X_train, X_test)
-
-        st.write("## Step 12: Model Training and Evaluation")
+# NOT ACTUALLY STEP 12
+        st.write("## Step (12): Model Training and Evaluation")
 
         if 'trained_models' not in st.session_state:
             st.session_state.trained_models = train_models(X_train_scaled, Y_train)
@@ -342,4 +342,56 @@ if uploaded_files:
         # Display the table with st.dataframe
         st.write("## Model Performance Table")
         st.dataframe(styled_df, use_container_width=True)
-        
+
+        st.write("## Visualizing Model Performance Comparison")
+
+        # Extracting model names and their respective performance metrics
+        model_names = list(model_performance.keys())
+        mse_values = [model_performance[model]["MSE"] for model in model_names]
+        r2_values = [model_performance[model]["R2 Score"] for model in model_names]
+        mae_values = [model_performance[model]["MAE"] for model in model_names]
+
+        # Creating a bar plot to compare MSE, R2, and MAE across models
+        fig, ax = plt.subplots(3,1, figsize=(14, 10))
+
+        # MSE Comparison
+        ax[0].bar(model_names, mse_values, color="purple")
+        ax[0].set_title('Model Comparison: MSE (Mean Squared Error)')
+        ax[0].set_ylabel('MSE')
+
+        # R2 Score Comparison
+        ax[1].bar(model_names, r2_values, color="green")
+        ax[1].set_title('Model Comparison: R2 Score')
+        ax[1].set_ylabel('R2 Score')
+
+        ax[2].bar(model_names, mae_values, color="orange")
+        ax[2].set_title('Model Comparison: MAE (Mean Absolute Error)')
+        ax[2].set_ylabel('MAE')
+
+        #display
+        plt.tight_layout()
+        st.pyplot(fig)
+
+        st.write("## Selecting the Best Model")
+
+        if model_performance:
+            best_model_mse = min(model_performance, key=lambda x: model_performance[x]["MSE"])
+            st.write("## Best Model based on lowest MSE: ", best_model_mse)
+
+            st.write('## Retraining the Best Model')
+            best_model = trained_models[best_model_mse]
+
+            X_combined_scaled = scaler.fit_transform(X)
+            best_model.fit(X_combined_scaled, y)
+
+            # save the best model in session state and also as a file
+            if 'best_model' not in st.session_state:
+                st.session_state.best_model = best_model
+
+            # save the model after retraining
+            model_filename = 'best_model.pkl'
+            joblib.dump(best_model, model_filename)
+            st.write(f"Model '{best_model_mse}' has been retrained and saved as '{model_filename}'")
+
+
+
