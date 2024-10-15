@@ -459,7 +459,7 @@ if uploaded_files:
                 ax.set_title(f"Input Features and Predicted {target_variable}")
                 ax.grid(True)
 
-                for i,txt in enumerate(values):
+                for i,txt in enumerate(copy_feature_values):
                     ax.annotate(f"{txt:.2f}", (copy_feature_name[i], copy_feature_values[i]),
                                 textcoords='offset points',
                                 xytext=(0,10), ha='center', )
