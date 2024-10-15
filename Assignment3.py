@@ -133,3 +133,30 @@ if uploaded_files:
         st.write("### Summary Statistics:")
         st.dataframe(cleaned_data.describe(), use_container_width=True)
 
+    # Visualising EDA - Histograms for continuous columns
+    continuous_variables = st.multiselect("Select continuous variables to visualize: ",
+                                          cleaned_data.select_dtypes(include=['float64', 'int64']).columns)
+
+    if continuous_variables:
+        for col in continuous_variables:
+            fig, ax = plt.subplots(figsize=(8, 4))
+            ax.hist(cleaned_data[col], bins=50, edgecolor='black', alpha=0.5)
+            ax.set_title(f'Distribution of {col}')
+            ax.set_xlabel(col)
+            ax.set_ylabel('Frequency')
+            st.pyplot(fig)
+
+    # Removing unnecessary columns
+    st.write("### Remove extra columns")
+    keeping_columns = st.multiselect("Select columns to keep:", cleaned_data.columns)
+
+    for col in
+
+    st.write('### Outlier Analysis: ')
+
+    numeric_columns = cleaned_data.select_dtypes(include=['float64', 'int64'])
+
+    if not numeric_columns.empty:
+        Q1 = cleaned_data[numeric_columns].quantile(0.25)
+        Q3 = cleaned_data[numeric_columns].quantile(0.75)
+        IQR = Q3 - Q1
