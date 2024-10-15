@@ -19,6 +19,10 @@ from sklearn.metrics import mean_absolute_error
 
 import joblib
 
+# Features to add:
+#  Remove duplicate columns
+
+
 gold_data = pd.read_csv('FINAL_USO.csv')
 
 # A function to clean the data by converting object columns to suitable data types
@@ -36,7 +40,7 @@ def clean_dataset(data):
     for col in data.select_dtypes(exclude=['int64', 'float64']).columns:
         try:
             data[col] = pd.to_datetime(data[col])
-        except:
+        except ValueError:
             data[col] = data[col]
 
     # attempt to convert numeric data types to boolean if applicable, otherwise keep original datatype
@@ -74,7 +78,7 @@ if uploaded_files:
 
     st.title(f'Processing Dataset: {selected_dataset}')
 
-    st.write('##Sample Data from the Selected Dataset')
+    st.write('### Sample Data from the Selected Dataset')
     st.dataframe(cleaned_data.sample(5), use_container_width=True)
 
     # This is what Pranav used, so don't know if we need it or not. From what I can tell we don't need it with our dataset
@@ -97,7 +101,7 @@ if uploaded_files:
     target_variable = st.selectbox('Select the Target Variable:', options=list(cleaned_data.columns))
     st.write(f"### Target Variable '{target_variable}'")
 
-    st.write("## Vizualizing the Target Variable")
+    st.write("## Visualizing the Target Variable")
 
     fig, ax = plt.subplots()
     ax.hist(cleaned_data[target_variable], bins=50, edgecolor='black', alpha=0.5)
@@ -106,13 +110,26 @@ if uploaded_files:
     ax.set_ylabel('Frequency')
     st.pyplot(fig)
 
-    comparison_columns = st.multiselect("Select Variables to compare: ", cleaned_data.columns)
-    if len(comparison_columns) > 1:
-        sns.pairplot(cleaned_data[comparison_columns])
-        plt.title('Pairplot of Selected Variables')
-        st.pyplot(plt.gcf())
 
 
+    # <>We need to figure out what kind of plots we need/want
 
-# clean_dataset(gold_data)
-# print(gold_data.info())
+    # comparison_columns = st.multiselect("Select Variables to compare: ", cleaned_data.columns)
+    # if len(comparison_columns) > 1:
+    #     sns.pairplot(cleaned_data[comparison_columns])
+    #     st.pyplot(plt.gcf())
+
+    # Creating 2 columns for data types and summary
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.write(f"### Data Types: ")
+        dtype_df = pd.DataFrame(cleaned_data.dtypes, columns=["data type"]).reset_index()
+        dtype_df = dtype_df.rename(columns={"index": "Column Name"})
+
+        st.dataframe(dtype_df, use_container_width=True)
+
+    with col2:
+        st.write("### Summary Statistics:")
+        st.dataframe(cleaned_data.describe(), use_container_width=True)
+
