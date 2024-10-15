@@ -25,6 +25,7 @@ import joblib
 #  A genralized way to filter out boolean data
 #  Check the number of steps is correct
 # remove the file selector, we know what file we want to use
+# Maybe add a region selector to filter out open/high/low and close for the region by column name. Might need to create a static dictionary for it or smth
 
 # correlation strength variables
 high = 0.95
