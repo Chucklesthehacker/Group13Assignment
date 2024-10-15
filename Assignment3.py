@@ -28,20 +28,23 @@ gold_data = pd.read_csv('FINAL_USO.csv')
 # A function to clean the data by converting object columns to suitable data types
 def clean_dataset(data):
     # attempt to convert columns to numeric where possible, keep original value if not
-    for col in data.select_dtypes(include=['object']).columns:
-        try:
-            data[col] = pd.to_numeric(data[col])
-        except ValueError:
-            data[col] = data[col].astype('object')
-        except:
-            pass
+    # for col in data.select_dtypes(include=['object']).columns:
+    #     try:
+    #         data[col] = pd.to_numeric(data[col])
+    #     except ValueError:
+    #         data[col] = data[col].astype('object')
+    #     except:
+    #         pass
 
     # attempt to convert all remaining data types into datetime, and if not keep original value
-    for col in data.select_dtypes(exclude=['int64', 'float64']).columns:
-        try:
-            data[col] = pd.to_datetime(data[col])
-        except ValueError:
-            data[col] = data[col]
+    # for col in data.select_dtypes(exclude=['int64', 'float64']).columns:
+    #     try:
+    #         data[col] = pd.to_datetime(data[col])
+    #     except ValueError:
+    #         data[col] = data[col]
+
+    data['Date'] = pd.to_datetime(data['Date'])
+
 
     # attempt to convert numeric data types to boolean if applicable, otherwise keep original datatype
     for col in data.select_dtypes(include=['int64', 'float64']).columns:
@@ -147,17 +150,17 @@ if uploaded_files:
             st.pyplot(fig)
 
     # Removing unnecessary columns
-    st.write("### Remove extra columns")
-    keeping_columns = st.multiselect("Select columns to keep:", cleaned_data.columns)
-    count = 0
-    for col in cleaned_data.columns:
-        if col not in keeping_columns:
-            cleaned_data = cleaned_data.drop(columns=[col])
-            count = count+1
-    st.write(f"### Removed extra {count} variables")
-    st.write("Remaining Variables: ", cleaned_data.columns.tolist())
-
-    st.write('### Outlier Analysis: ')
+    # st.write("### Remove extra columns")
+    # keeping_columns = st.multiselect("Select columns to keep:", cleaned_data.columns)
+    # count = 0
+    # for col in cleaned_data.columns:
+    #     if col not in keeping_columns:
+    #         cleaned_data = cleaned_data.drop(columns=[col])
+    #         count = count+1
+    # st.write(f"### Removed extra {count} variables")
+    # st.write("Remaining Variables: ", cleaned_data.columns.tolist())
+    # 
+    # st.write('### Outlier Analysis: ')
 
 
     numeric_columns = cleaned_data.select_dtypes(include=['float64', 'int64'])
@@ -166,3 +169,41 @@ if uploaded_files:
         Q1 = numeric_columns.quantile(0.25)
         Q3 = numeric_columns.quantile(0.75)
         IQR = Q3 - Q1
+
+        outliers = (numeric_columns < (Q1-1.5*IQR)) | (numeric_columns > (Q3+1.5*IQR))
+
+        outliers_count = outliers.sum()
+
+        st.write("### Number of Outliers for each numeric Variable")
+        dtype_df_outlier = pd.DataFrame(outliers_count, columns=["Number of Outliers"]).reset_index()
+        dtype_df_outlier = dtype_df_outlier.rename(columns={"index": "Column Name"})
+        st.dataframe(dtype_df_outlier, use_container_width=True)
+    else:
+        st.write("No appropriate data for analysis")
+
+    # Missing Values
+    st.write("### Step 7: Missing Values")
+    missing_values = cleaned_data.isnull().sum()
+    st.write("### Missing Values in each Variable")
+    dtype_df_missing = pd.DataFrame(missing_values, columns=["Missing Values"]).reset_index()
+    dtype_df_missing = dtype_df_missing.rename(columns={"index": "Column Name"})
+    st.dataframe(dtype_df_missing, use_container_width=True)
+
+    if not numeric_columns.empty:
+        correlation_matrix = numeric_columns.corr()
+
+        fig, ax = plt.subplots(figsize=(14, 10))
+        sns.heatmap(correlation_matrix, annot=True, ax=ax, cmap="coolwarm")
+        st.pyplot(fig)
+
+        target_correlations = correlation_matrix[target_variable].drop(target_variable)
+
+        st.write(f"### Correlation of Features with Target Variable: '{target_variable}'")
+        
+        strong_corr = target_correlations[target_correlations.abs() >= 0.95]
+        moderate_corr = target_correlations[(target_correlations.abs() <= 0.5) & (target_correlations.abs() < 0.95)]
+        weak_corr = target_correlations[target_correlations.abs() < 0.5]
+        
+        st.write(f"### Strong Correlations (|correlation| >= 0.7)")
+        st.dataframe(strong_corr, use_container_width=True)
+        
