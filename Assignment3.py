@@ -109,7 +109,7 @@ if uploaded_files:
     #     st.write("Dropped 'Unnamed: 0' column from the dataset.")
 
     # Show cleaned data
-    st.write('########### Cleaned data types')
+    st.write('### Cleaned data types')
     dtype_df = pd.DataFrame(cleaned_data.dtypes, columns=["data type"]).reset_index().rename(
         columns={"index": "Column Name"})
     st.dataframe(dtype_df, use_container_width=True)
