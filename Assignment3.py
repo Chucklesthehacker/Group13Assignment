@@ -58,22 +58,6 @@ def scale_data(X_train, X_test):
 
 # A function to clean the data by converting object columns to suitable data types
 def clean_dataset(data):
-    # attempt to convert columns to numeric where possible, keep original value if not
-    # for col in data.select_dtypes(include=['object']).columns:
-    #     try:
-    #         data[col] = pd.to_numeric(data[col])
-    #     except ValueError:
-    #         data[col] = data[col].astype('object')
-    #     except:
-    #         pass
-
-    # attempt to convert all remaining data types into datetime, and if not keep original value
-    # for col in data.select_dtypes(exclude=['int64', 'float64']).columns:
-    #     try:
-    #         data[col] = pd.to_datetime(data[col])
-    #     except ValueError:
-    #         data[col] = data[col]
-
     data['Date'] = pd.to_datetime(data['Date'])
     bool_variables = ['EU_Trend', 'OF_Trend','OS_Trend', 'SF_Trend', 'USB_Trend', 'PLT_Trend', 'PLD_Trend', 'USDI_Trend']
     for variable in bool_variables:
@@ -99,9 +83,12 @@ dtype_df = pd.DataFrame(cleaned_data.dtypes, columns=["data type"]).reset_index(
     columns={"index": "Column Name"})
 st.dataframe(dtype_df, use_container_width=True)
 
+drop_duplicate_data = cleaned_data.drop_duplicates()
+
 # Show shape and columns of selected dataset
 st.write('## Dataset Information')
 st.write(f'## Shape: {cleaned_data.shape}')
+st.write(f'## Shape after deleting duplicates: {drop_duplicate_data.shape}')
 st.write(f'Columns in the dataset: ', cleaned_data.columns.tolist())
 
 # Select the Target Variable
@@ -117,6 +104,32 @@ ax.set_xlabel(target_variable)
 ax.set_ylabel('Frequency')
 st.pyplot(fig)
 
+st.write("### unique values in the dataset")
+st.write(cleaned_data.nunique())
+
+# st.write("### Remove extra columns")
+# keeping_columns = st.multiselect("Select columns to keep:", cleaned_data.columns)
+# count = 0
+# for col in cleaned_data.columns:
+#     if col not in keeping_columns:
+#         cleaned_data = cleaned_data.drop(columns=[col])
+#         count = count+1
+# st.write(f"### Removed extra {count} variables")
+# st.write("Remaining Variables: ", cleaned_data.columns.tolist())
+# #
+# st.write('### Outlier Analysis: ')
+# unique_values = []
+# for col in cleaned_data.columns:
+#     if cleaned_data.nunique() < 1000:
+#         unique_values = unique_values.append(col)
+#
+# count =0
+# for col in cleaned_data.columns:
+#     if col not in unique_values:
+#         cleaned_data = cleaned_data.drop(columns=[col])
+#         count +=1
+#
+# st.write(f"### Removed {count} columns with less than 1000 unique values")
 
 
 # <>We need to figure out what kind of plots we need/want
@@ -154,15 +167,15 @@ if continuous_variables:
         st.pyplot(fig)
 
 # Removing unnecessary columns
-# st.write("### Remove extra columns")
-# keeping_columns = st.multiselect("Select columns to keep:", cleaned_data.columns)
-# count = 0
-# for col in cleaned_data.columns:
-#     if col not in keeping_columns:
-#         cleaned_data = cleaned_data.drop(columns=[col])
-#         count = count+1
-# st.write(f"### Removed extra {count} variables")
-# st.write("Remaining Variables: ", cleaned_data.columns.tolist())
+st.write("### Remove extra columns")
+keeping_columns = st.multiselect("Select columns to keep:", cleaned_data.columns)
+count = 0
+for col in cleaned_data.columns:
+    if col not in keeping_columns:
+        cleaned_data = cleaned_data.drop(columns=[col])
+        count = count+1
+st.write(f"### Removed extra {count} variables")
+st.write("Remaining Variables: ", cleaned_data.columns.tolist())
 #
 st.write('### Outlier Analysis: ')
 
