@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 from scipy import stats
+import io
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -32,7 +33,8 @@ high = 0.95
 low =0.75
 
 
-gold_data = pd.read_csv('FINAL_USO.csv')
+gold_data = pd.read_csv('FINAL_USO.csv',)
+
 @st.cache_resource
 def train_models(X_train_scaled, y_train):
     models = {
@@ -58,24 +60,22 @@ def scale_data(X_train, X_test):
 
 # A function to clean the data by converting object columns to suitable data types
 def clean_dataset(data):
-    data['Date'] = pd.to_datetime(data['Date'])
     bool_variables = ['EU_Trend', 'OF_Trend','OS_Trend', 'SF_Trend', 'USB_Trend', 'PLT_Trend', 'PLD_Trend', 'USDI_Trend']
     for variable in bool_variables:
         data[variable] = data[variable].astype('bool')
+
     return data
 
 
-data = gold_data
-cleaned_data = data.drop_duplicates()
+dataset = gold_data
+cleaned_data = dataset.drop_duplicates()
 
 # Convert object data types to numeric or datetime
 cleaned_data = clean_dataset(cleaned_data)
-
 st.title(f'Processing Dataset: FINAL_USO')
 
 st.write('### Sample Data from the Selected Dataset')
 st.dataframe(cleaned_data.sample(5), use_container_width=True)
-
 
 # Show cleaned data
 st.write('### Cleaned data types')
@@ -87,11 +87,26 @@ drop_duplicate_data = cleaned_data.drop_duplicates()
 
 # Show shape and columns of selected dataset
 st.write('## Dataset Information')
-st.write(f'## Shape: {cleaned_data.shape}')
-st.write(f'## Shape after deleting duplicates: {drop_duplicate_data.shape}')
+st.write(f'### Shape: {cleaned_data.shape}')
+st.write(f'### Shape after deleting duplicates: {drop_duplicate_data.shape}')
 st.write(f'Columns in the dataset: ', cleaned_data.columns.tolist())
 
+# Removing unnecessary columns
+st.write("### Select Columns to remove from the dataset")
+remove_columns = st.multiselect("Select columns to remove:", cleaned_data.columns)
+count = 0
+if remove_columns:
+    for col in cleaned_data.columns:
+        if col in remove_columns:
+            cleaned_data = cleaned_data.drop(columns=[col])
+            count = count+1
+    st.write(f"Removed  {remove_columns} ")
+    st.write(f" Shape after removing columns: {cleaned_data.shape}")
+
+
+
 # Select the Target Variable
+st.write('## Select the Target Variable')
 target_variable = st.selectbox('Select the Target Variable:', options=list(cleaned_data.columns))
 st.write(f"### Target Variable '{target_variable}'")
 
@@ -103,9 +118,6 @@ ax.set_title(f'Distribution of {target_variable}')
 ax.set_xlabel(target_variable)
 ax.set_ylabel('Frequency')
 st.pyplot(fig)
-
-st.write("### unique values in the dataset")
-st.write(cleaned_data.nunique())
 
 # st.write("### Remove extra columns")
 # keeping_columns = st.multiselect("Select columns to keep:", cleaned_data.columns)
@@ -150,8 +162,19 @@ with col1:
     st.dataframe(dtype_df, use_container_width=True)
 
 with col2:
-    st.write("### Summary Statistics:")
-    st.dataframe(cleaned_data.describe(), use_container_width=True)
+    st.write("### Unique Values")
+    st.dataframe(cleaned_data.nunique(), use_container_width=True)
+
+st.write("### Summary Statistics:")
+st.dataframe(cleaned_data.describe(), use_container_width=True)
+
+# Creating a buffer to pipe the output of info() method to show in streamlit
+buffer = io.StringIO()
+cleaned_data.info(buf=buffer)
+cleaned_data_info = buffer.getvalue()
+st.write("### Description of Dataset")
+st.text(cleaned_data_info)
+
 
 # Visualising EDA - Histograms for continuous columns
 continuous_variables = st.multiselect("Select continuous variables to visualize: ",
@@ -167,16 +190,17 @@ if continuous_variables:
         st.pyplot(fig)
 
 # Removing unnecessary columns
-st.write("### Remove extra columns")
+st.write("### Select Columns to keep")
 keeping_columns = st.multiselect("Select columns to keep:", cleaned_data.columns)
 count = 0
-for col in cleaned_data.columns:
-    if col not in keeping_columns:
-        cleaned_data = cleaned_data.drop(columns=[col])
-        count = count+1
-st.write(f"### Removed extra {count} variables")
-st.write("Remaining Variables: ", cleaned_data.columns.tolist())
-#
+if keeping_columns:
+    for col in cleaned_data.columns:
+        if col not in keeping_columns:
+            cleaned_data = cleaned_data.drop(columns=[col])
+            count = count+1
+    st.write(f"### Removed extra {count} variables")
+    st.write("Remaining Variables: ", cleaned_data.columns.tolist())
+
 st.write('### Outlier Analysis: ')
 
 numeric_columns = cleaned_data.select_dtypes(include=['float64', 'int64'])
