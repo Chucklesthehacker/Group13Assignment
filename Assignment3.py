@@ -33,7 +33,7 @@ high = 0.95
 low =0.75
 
 
-gold_data = pd.read_csv('FINAL_USO.csv',)
+gold_data = pd.read_csv('FINAL_USO.csv',index_col='Date', infer_datetime_format=True)
 
 @st.cache_resource
 def train_models(X_train_scaled, y_train):
@@ -353,7 +353,7 @@ if selected_features:
 
     performance_df = pd.DataFrame(model_performance).T
 
-    styled_df = performance_df.style.format(precision=2)\
+    styled_df = performance_df.style.format(precision=5)\
         .background_gradient(subset=['MSE'], cmap="Purples", low=0, high=1) \
         .background_gradient(subset=['R2 Score'], cmap="Greens", low=0, high=1) \
         .background_gradient(subset=['MAE'], cmap="Oranges", low=0, high=1) \
@@ -439,7 +439,7 @@ if selected_features:
             user_input_vales[feature] = st.number_input(f"enter value for {feature}",
                                                         value=float(cleaned_data[feature].mean()))
         if st.button("Predict"):
-            #Convert user input to dataframe
+            # Convert user input to dataframe
             user_input_df = pd.DataFrame([user_input_vales])
 
             # Scale the user inputs using the same scaler
@@ -449,46 +449,46 @@ if selected_features:
             predicted_value = loaded_model.predict(user_input_scaled)
 
             # Display the predicted value
-            st.write(f"### Predicted {target_variable}: {predicted_value[0]:.2f}")
+            st.write(f"# Predicted final {target_variable}: ${predicted_value[0]:.2f}")
 
-            fig,ax = plt.subplots()
-
-            feature_names = list(user_input_vales.keys())
-            feature_values = list(user_input_vales.values())
-
-            ax.bar(feature_names, feature_values, color="lavender", label='Feature Values')
-
-            ax.bar(['Predicted ' + target_variable],[predicted_value[0]], color='teal',
-                   label='Predicted Values')
-
-            ax.set_xlabel('Value')
-            ax.set_title(f"Input Features and Predicted {target_variable}")
-            ax.legend()
-
-            st.pyplot(fig)
-
-            fig,ax = plt.subplots(figsize=(14, 10))
-
-            copy_feature_name = feature_names.copy()
-            copy_feature_values = feature_values.copy()
-            # Add predicted value at the end
-            copy_feature_name.append(f"Predicted {target_variable}")
-            copy_feature_values.append(predicted_value[0])
-
-            ax.plot(copy_feature_name, copy_feature_values, color='purple', marker='o', linestyle='-',
-                    label='Features Predicted Values')
-
-            ax.set_xlabel('Features and Predicted value')
-            ax.set_ylabel('Values')
-            ax.set_title(f"Input Features and Predicted {target_variable}")
-            ax.grid(True)
-
-            for i,txt in enumerate(copy_feature_values):
-                ax.annotate(f"{txt:.2f}", (copy_feature_name[i], copy_feature_values[i]),
-                            textcoords='offset points',
-                            xytext=(0,10), ha='center', )
-
-            st.pyplot(fig)
+            # fig,ax = plt.subplots()
+            #
+            # feature_names = list(user_input_vales.keys())
+            # feature_values = list(user_input_vales.values())
+            #
+            # ax.bar(feature_names, feature_values, color="lavender", label='Feature Values')
+            #
+            # ax.bar(['Predicted ' + target_variable],[predicted_value[0]], color='teal',
+            #        label='Predicted Values')
+            #
+            # ax.set_xlabel('Value')
+            # ax.set_title(f"Input Features and Predicted {target_variable}")
+            # ax.legend()
+            #
+            # st.pyplot(fig)
+            #
+            # fig,ax = plt.subplots(figsize=(14, 10))
+            #
+            # copy_feature_name = feature_names.copy()
+            # copy_feature_values = feature_values.copy()
+            # # Add predicted value at the end
+            # copy_feature_name.append(f"Predicted {target_variable}")
+            # copy_feature_values.append(predicted_value[0])
+            #
+            # ax.plot(copy_feature_name, copy_feature_values, color='purple', marker='o', linestyle='-',
+            #         label='Features Predicted Values')
+            #
+            # ax.set_xlabel('Features and Predicted value')
+            # ax.set_ylabel('Values')
+            # ax.set_title(f"Input Features and Predicted {target_variable}")
+            # ax.grid(True)
+            #
+            # for i,txt in enumerate(copy_feature_values):
+            #     ax.annotate(f"{txt:.2f}", (copy_feature_name[i], copy_feature_values[i]),
+            #                 textcoords='offset points',
+            #                 xytext=(0,10), ha='center', )
+            #
+            # st.pyplot(fig)
 
     except FileNotFoundError:
         st.write(f"Model '{model_filename}' does not exist. Please ensure 'twas save correctly milord")
