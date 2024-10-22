@@ -20,6 +20,8 @@ from sklearn.metrics import mean_absolute_error
 
 import joblib
 
+## NEED TO ADD OUTCOMES THROUGH PRESENTATION
+
 # Features to add /things to check:
 #  Remove duplicate columns
 #  A high strength correlation matrix
@@ -82,11 +84,12 @@ if uploaded_files:
     data = datasets[selected_file]
     if 'Date' in data.columns:
         data = data.set_index('Date')
+
     cleaned_data = data.drop_duplicates()
 
     # Convert object data types to numeric or datetime
     cleaned_data = clean_dataset(cleaned_data)
-    st.title(f'Processing Dataset: FINAL_USO')
+    st.title(f'Processing Dataset: {selected_file}')
 
     st.write('### Sample Data from the Selected Dataset')
     st.dataframe(cleaned_data.sample(5), use_container_width=True)
@@ -103,7 +106,8 @@ if uploaded_files:
     st.write('## Dataset Information')
     st.write(f'### Shape: {cleaned_data.shape}')
     st.write(f'### Shape after deleting duplicates: {drop_duplicate_data.shape}')
-    st.write(f'Columns in the dataset: ', cleaned_data.columns.tolist())
+    st.write("From analysis after dropping duplicates, it's noted that there are no duplicate rows within our dataset")
+    st.write(f'### Columns in the dataset: ', cleaned_data.columns.tolist())
 
     # Removing unnecessary columns
     st.write("### Select Columns to remove from the dataset")
@@ -191,7 +195,8 @@ if uploaded_files:
 
 
     # Visualising EDA - Histograms for continuous columns
-    continuous_variables = st.multiselect("Select continuous variables to visualize: ",
+    st.write("### Visualisation of EDA for continuous variables")
+    continuous_variables = st.multiselect("Select predictor variables to visualize: ",
                                           cleaned_data.select_dtypes(include=['float64', 'int64']).columns)
 
     if continuous_variables:
@@ -236,7 +241,7 @@ if uploaded_files:
         st.write("No appropriate data for analysis")
 
     # Missing Values
-    st.write("### Step 7: Missing Values")
+    st.write("###  Missing Values")
     missing_values = cleaned_data.isnull().sum()
     st.write("### Missing Values in each Variable")
     dtype_df_missing = pd.DataFrame(missing_values, columns=["Missing Values"]).reset_index()
@@ -282,45 +287,46 @@ if uploaded_files:
     # WE NEED TO COME BACK AND LOOKY AT THISSY IT WORKS BUT EHEHEHEHEH
     if not categorical_columns.empty:
         selected_categorical = st.multiselect("Select categorical variables for ANOVA: ", categorical_columns.columns)
+        if selected_categorical:
+            if pd.api.types.is_numeric_dtype(cleaned_data[target_variable]):
+                anova_results = []
 
-        if pd.api.types.is_numeric_dtype(cleaned_data[target_variable]):
-            anova_results = []
-
-            for cat_col in selected_categorical:
-                anova_groups = cleaned_data.groupby(cat_col)[target_variable].apply(list)
-                f_val, p_val = stats.f_oneway(*anova_groups)
-
-                anova_results.append({"Categorical Variable": cat_col, "F-Value": f_val, "P-Value": p_val})
-
-            anova_df = pd.DataFrame(anova_results)
-
-            st.write("### ANOVA Results")
-            st.write("The following table shows F and P-values for each categorical variable.")
-            st.dataframe(anova_df, use_container_width=True)
-
-            if "P-Value" in anova_df.columns:
-                significant_vars = anova_df[anova_df["P-Value"] < 0.05]
-                st.write("### Significant Variables (P < 0.05):")
-                if not significant_vars.empty:
-                    st.dataframe(significant_vars, use_container_width=True)
-                else:
-                    st.write("No significant variables (P < 0.05) detected")
-
-                st.write("### Box Plot: Categorical Variable vs Target Variable")
                 for cat_col in selected_categorical:
-                    fig, ax = plt.subplots(figsize=(14, 10))
-                    sns.boxplot(x=cat_col,y=target_variable, data=cleaned_data, ax=ax)
-                    ax.set_title(f'{cat_col} vs {target_variable}')
-                    st.pyplot(fig)
+                    anova_groups = cleaned_data.groupby(cat_col)[target_variable].apply(list)
+                    f_val, p_val = stats.f_oneway(*anova_groups)
+
+                    anova_results.append({"Categorical Variable": cat_col, "F-Value": f_val, "P-Value": p_val})
+
+                anova_df = pd.DataFrame(anova_results)
+
+                st.write("### ANOVA Results")
+                st.write("The following table shows F and P-values for each categorical variable.")
+                st.dataframe(anova_df, use_container_width=True)
+
+                if "P-Value" in anova_df.columns:
+                    significant_vars = anova_df[anova_df["P-Value"] < 0.05]
+                    st.write("### Significant Variables (P < 0.05):")
+                    if not significant_vars.empty:
+                        st.dataframe(significant_vars, use_container_width=True)
+                    else:
+                        st.write("No significant variables (P < 0.05) detected")
+
+                    st.write("### Box Plot: Categorical Variable vs Target Variable")
+                    for cat_col in selected_categorical:
+                        fig, ax = plt.subplots(figsize=(14, 10))
+                        sns.boxplot(x=cat_col,y=target_variable, data=cleaned_data, ax=ax)
+                        ax.set_title(f'{cat_col} vs {target_variable}')
+                        st.pyplot(fig)
             else:
-                st.write("No categorical variables selected for ANOVA")
+                st.write("The target variable must be continuous for ANOVA analysis")
         else:
-            st.write("The target variable must be continuous for ANOVA analysis")
+         st.write("No categorical variables selected for ANOVA")
+
     else:
         st.write("No categorical available for ANOVA")
 
     # Step 10:
-    st.write("## Step 10: Selecting Final Predictors")
+    st.write("##  Selecting Final Predictors")
     for columns in cleaned_data:
         if columns in target_variable:
             final_predictors = cleaned_data.drop(columns=[columns])
@@ -337,7 +343,7 @@ if uploaded_files:
         st.write(f"### Target Variable: '{target_variable}'")
 
         # step 11: data prep for machine learning
-        st.write('## Step11: Data Preparation for Machine Learning')
+        st.write('## : Data Preparation for Machine Learning')
 
         X = cleaned_data[selected_features]
         y = cleaned_data[target_variable]
@@ -347,7 +353,7 @@ if uploaded_files:
 
         scaler, X_train_scaled, X_test_scaled = scale_data(X_train, X_test)
     # NOT ACTUALLY STEP 12
-        st.write("## Step (12): Model Training and Evaluation")
+        st.write("## Model Training and Evaluation")
 
         if 'trained_models' not in st.session_state:
             st.session_state.trained_models = train_models(X_train_scaled, Y_train)
@@ -436,7 +442,7 @@ if uploaded_files:
             st.write("No model performance results available. Please ensure (super)models were trained successfully")
 
         # Step ???
-        st.write("## Step 15: Model Deployment - Predict Using Saved Model")
+        st.write("## Model Deployment - Predict Using Saved Model")
 
         # Load saved model
         model_filename = 'best_model.pkl'
@@ -465,44 +471,44 @@ if uploaded_files:
                 # Display the predicted value
                 st.write(f"# Predicted final {target_variable}: ${predicted_value[0]:.2f}")
 
-                # fig,ax = plt.subplots()
-                #
-                # feature_names = list(user_input_vales.keys())
-                # feature_values = list(user_input_vales.values())
-                #
-                # ax.bar(feature_names, feature_values, color="lavender", label='Feature Values')
-                #
-                # ax.bar(['Predicted ' + target_variable],[predicted_value[0]], color='teal',
-                #        label='Predicted Values')
-                #
-                # ax.set_xlabel('Value')
-                # ax.set_title(f"Input Features and Predicted {target_variable}")
-                # ax.legend()
-                #
-                # st.pyplot(fig)
-                #
-                # fig,ax = plt.subplots(figsize=(14, 10))
-                #
-                # copy_feature_name = feature_names.copy()
-                # copy_feature_values = feature_values.copy()
-                # # Add predicted value at the end
-                # copy_feature_name.append(f"Predicted {target_variable}")
-                # copy_feature_values.append(predicted_value[0])
-                #
-                # ax.plot(copy_feature_name, copy_feature_values, color='purple', marker='o', linestyle='-',
-                #         label='Features Predicted Values')
-                #
-                # ax.set_xlabel('Features and Predicted value')
-                # ax.set_ylabel('Values')
-                # ax.set_title(f"Input Features and Predicted {target_variable}")
-                # ax.grid(True)
-                #
-                # for i,txt in enumerate(copy_feature_values):
-                #     ax.annotate(f"{txt:.2f}", (copy_feature_name[i], copy_feature_values[i]),
-                #                 textcoords='offset points',
-                #                 xytext=(0,10), ha='center', )
-                #
-                # st.pyplot(fig)
+                fig,ax = plt.subplots()
+
+                feature_names = list(user_input_vales.keys())
+                feature_values = list(user_input_vales.values())
+
+                ax.bar(feature_names, feature_values, color="lavender", label='Feature Values')
+
+                ax.bar(['Predicted ' + target_variable],[predicted_value[0]], color='teal',
+                       label='Predicted Values')
+
+                ax.set_xlabel('Value')
+                ax.set_title(f"Input Features and Predicted {target_variable}")
+                ax.legend()
+
+                st.pyplot(fig)
+
+                fig,ax = plt.subplots(figsize=(14, 10))
+
+                copy_feature_name = feature_names.copy()
+                copy_feature_values = feature_values.copy()
+                # Add predicted value at the end
+                copy_feature_name.append(f"Predicted {target_variable}")
+                copy_feature_values.append(predicted_value[0])
+
+                ax.plot(copy_feature_name, copy_feature_values, color='purple', marker='o', linestyle='-',
+                        label='Features Predicted Values')
+
+                ax.set_xlabel('Features and Predicted value')
+                ax.set_ylabel('Values')
+                ax.set_title(f"Input Features and Predicted {target_variable}")
+                ax.grid(True)
+
+                for i,txt in enumerate(copy_feature_values):
+                    ax.annotate(f"{txt:.2f}", (copy_feature_name[i], copy_feature_values[i]),
+                                textcoords='offset points',
+                                xytext=(0,10), ha='center', )
+
+                st.pyplot(fig)
 
         except FileNotFoundError:
             st.write(f"Model '{model_filename}' does not exist. Please ensure 'twas save correctly milord")
