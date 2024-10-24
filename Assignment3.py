@@ -35,6 +35,7 @@ high = 0.95
 low = 0.75
 
 
+gold_data = pd.read_csv('FINAL_USO.csv')
 
 
 @st.cache_resource
@@ -71,17 +72,18 @@ def clean_dataset(data):
     return data
 
 
-datasets = {}
+# datasets = {}
+#
+# st.sidebar.title("Upload Dataset(s)")
+# uploaded_files = st.sidebar.file_uploader("Choose at least one CSV file to upload", type=['csv'],
+#                                           accept_multiple_files=True)
+# if uploaded_files:
+#     for uploaded_file in uploaded_files:
+#         datasets[uploaded_file.name] = pd.read_csv(uploaded_file)
+#     selected_file = st.sidebar.selectbox("Select Dataset", options=list(datasets.keys()))
 
-st.sidebar.title("Upload Dataset(s)")
-uploaded_files = st.sidebar.file_uploader("Choose at least one CSV file to upload", type=['csv'],
-                                          accept_multiple_files=True)
-if uploaded_files:
-    for uploaded_file in uploaded_files:
-        datasets[uploaded_file.name] = pd.read_csv(uploaded_file)
-    selected_file = st.sidebar.selectbox("Select Dataset", options=list(datasets.keys()))
+    data = gold_data
 
-    data = datasets[selected_file]
     if 'Date' in data.columns:
         data = data.set_index('Date')
 
@@ -90,6 +92,10 @@ if uploaded_files:
     # Convert object data types to numeric or datetime
     cleaned_data = clean_dataset(cleaned_data)
     st.title(f'Processing Dataset: {selected_file}')
+
+    st.write("# Step 1: Reading the data with python")
+    st.write("The first step undertaken was loading the dataset into Python, converting the columns to suitable"
+             " datatypes and displaying a sample of the data, alongside what datatype each column was converted to.")
 
     st.write('### Sample Data from the Selected Dataset')
     st.dataframe(cleaned_data.sample(5), use_container_width=True)
@@ -515,5 +521,5 @@ if uploaded_files:
 
     else:
         st.write("No numeric features selected for training")
-else:
-    st.write("Please upload one or more CSV files from the sidebar")
+# else:
+#     st.write("Please upload one or more CSV files from the sidebar")
