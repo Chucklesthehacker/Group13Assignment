@@ -237,10 +237,10 @@ st.divider()
 st.write("# Step 5 Visual EDA of Categorical Predictor Variables")
 st.write("In this step we will visualize the distribution of all categorical predictor variables. "
          "That is any variable that has less than 20 values, and has repetition of "
-         "values so that data can be grouped by the unique values")
+         "values so that data can be grouped by the unique values.")
 st.write("From the basic analysis performed in the previous step, we identified 8 categorical predictors. These are:")
 st.write(bool_variables)
-st.write("We will use bar charts to show how the data is distributed in each variable")
+st.write("We will use bar charts to show how the data is distributed in each variable:")
 
 
 col1, col2, col3, col4 = st.columns(4)
@@ -290,7 +290,7 @@ with col4:
     st.pyplot(fig, use_container_width=True)
 
 st.write("### Observations from Step 5: ")
-st.write("The bar charts above show the frequency of each unique value in the variable. Ideally, each value within "
+st.write("The bar charts above show the frequency of each unique value in the variable. Ideally, each value within."
          "the variable will have comparable frequencies.")
 st.write("As shown, all 8 categorical predictor variables have an almost perfectly even distribution, as such we "
          "will be able to use them all for the ML regression algorithm to learn.")
@@ -408,18 +408,18 @@ st.write("As shown in the histograms, the first three predictor variables are po
          "normal distribution, with a smaller secondary peak at higher values, and we can remove those outliers to "
          "assist in the ML prediction later on in the analysis if it's required. ")
 st.write("The histograms for the variables relating to platinum show that the distribution is evenly skewed across two "
-         "peaks at higher and lower values, so we will keep the distribution as is")
+         "peaks at higher and lower values, so we will keep the distribution as is.")
 st.write("The distribution of palladium shows a fairly normalised bell curve, with a slight positive skew."
-         " As such we will keep palladium unchanged")
+         " As such we will keep palladium unchanged.")
 st.write("The distribution of Rhodium shows a massively uneven distribution. We will asses it's outlier count in the "
-         "next step, and if the outlier count is not favorable, we will remove 'RHO_PRICE'")
+         "next step, and if the outlier count is not favorable, we will remove 'RHO_PRICE'.")
 st.divider()
 
 
 st.write("# Step 7: Outlier Analysis")
 st.write("This step is to identify the number of outliers contained in each variable. We will use this in conjunction "
          "with the visualisation in the previous step to assess whether to remove or keep outliers present "
-         "in the dataset")
+         "in the dataset.")
 
 continuous_variables_copy = cleaned_data_copy.select_dtypes(include=['number'])
 Q1 = continuous_variables_copy.quantile(0.25)
@@ -439,8 +439,8 @@ st.write("### Observations of Step 7:")
 st.write("After visualising the distribution in the previous step, and assessing how many outliers were present in the",
          "variables relating to gold price, we have elected to maintain the distribution as is, as it will not skew"
          " the predicted value too much in later analysis. This is included for variables not visualised as it can be"
-         "assumed that the distribution is similar to that of variables assessed due to the results of the correlation "
-         "later in the analysis")
+         " assumed that the distribution is similar to that of variables assessed due to the results of the correlation "
+         "later in the analysis.")
 st.write("As stated in the previous step, we have assessed the outlier count for RHO_PRICE, and given it is nearly "
          "as much as that of gold, without having the favourable distribution of gold, we have elected to remove it.")
 
@@ -464,7 +464,7 @@ st.dataframe(dtype_dt_missing, use_container_width=True)
 
 st.write("### Observations of Step 8:")
 st.write("For the sample dataset being used for this model there are no missing values, the data set passed on to the "
-         "machine learning models is unchanged")
+         "machine learning models is unchanged.")
 st.divider()
 
 
@@ -482,11 +482,11 @@ st.write("In section, we will visualise the relationship between the continuous 
          "variable. What we are looking for here is whether there is a trend to the data. "
          "Depending on the type of trend, this can indicate one of three things:")
 st.write("- Increasing Trend: If there is an increasing trend to the data, it means both variables are positively "
-         "correlated. In layman's terns, they are directly proportional to each other. Where one increases, "
-         "the other does as well")
+         "correlated. In layman's terms, they are directly proportional to each other. Where one increases, "
+         "the other does as well.")
 st.write("- Decreasing Trend: If there is a decreasing trend to the data, it means both variables are negatively "
          "correlated. in layman's terms, where one increases, the other decreases. This is an outcome we might want"
-         " to see, as it also helps ML models ")
+         " to see, as it also helps ML models.")
 st.write("- No Trend: If there is no trend to the data, it means there is no correlation between the predictor and "
          "target variables, and the predictor should be excluded from further analysis.")
 st.write("Once we have visualised the relationship with all the predictor variables, we will assess which ones we need "
@@ -545,7 +545,7 @@ strong_cor_list = strong_cor_col_df.columns.tolist()
 cleaned_data = cleaned_data.drop(columns=["PLD_Open", "PLD_High", "PLD_Low", "PLD_Price"])
 continuous_variables = continuous_variables.drop(columns=["PLD_Open", "PLD_High", "PLD_Low", "PLD_Price"])
 
-st.write("So that we can ensure we are conducting thorough investigation into potential MLM to use later, we will have"
+st.write("So that we can ensure we are conducting thorough investigation into potential MLMs to use later, we will have"
          " a look at the distribution of the strong corr again, looking to see if there is a higher-degree polynomial"
          " than shown for the variables relating to gold. This will allow us to understand if we need to create a"
          " polynomial regression model. The results of this will be used in Step 13.")
@@ -568,10 +568,10 @@ for cat_col in bool_variables:
     st.pyplot(fig)
 
 st.write("As the box plots don't show us much in the way of correlation between the predictors and the target variable,"
-         " we will perform an ANOVA analysis to assess the correlation further")
+         " we will perform an ANOVA analysis to assess the correlation further.")
 st.write("In the ANOVA test, we are checking to see whether the mean values are significantly different between the"
          " target and the categorical variables. The indicator we are looking at in order to reject the null hypothesis"
-         " is a low p-value.")
+         " is a low p-value of less than 0.05.")
 
 anova_results = []
 for cat_col in bool_variables:
@@ -674,30 +674,30 @@ st.divider()
 st.write("# Step 13: Selecting MLMs to Train on the Data")
 st.write('For this step, we will investigate which MLM are available to us. From the sklearn library, we '
          'have access to a few models. Given the results from Step 9, and viewing the estimated regression, '
-         'there is no need for us to use a polynomial regression, so we will use the standard Linear Regression Model')
+         'there is no need for us to use a polynomial regression, so we will use the standard Linear Regression Model.')
 st.write('To ensure we are selecting the best model, we wil also train 4 other models on the data and compare their '
-         'results to determine the final model')
+         'results to determine the final model.')
 st.write('The selected models we have chosen are:')
 st.write('- Linear Regression: A model most widely used when there is a linear relationship between '
-         'target and predictor variables')
+         'target and predictor variables.')
 st.write('- Support Vector Regression (SVR): Typically used for classification tasks, however can also be used for '
          'regression models.')
 st.write('- Decision Tree Regression: A type of regression model that builds a decision tree to predict the target'
-         ' variable')
+         ' variable.')
 st.write('- K-Nearest Neighbors Regression: A type of regression model that predicts a new data-point by averaging the'
-         ' target values of the nearest actual data-points in the feature space')
-st.write('- Random Forest Regression: A model that combines decision trees to predict the target variable')
+         ' target values of the nearest actual data-points in the feature space.')
+st.write('- Random Forest Regression: A model that combines decision trees to predict the target variable.')
 st.divider()
 
 
 st.write("# Step 14: Selection of the Best Model")
-st.write("In this step, we will be selecting the best model to predict the target variable")
+st.write("In this step, we will be selecting the best model to predict the target variable.")
 st.write("In order to do this, we will perform a number of tests on the data using the selected models to see how "
          "well they perform. The tests we will perform are: ")
-st.write("- Mean Squared Error: Used to calculate the difference between the square of the difference between the"
+st.write("- Mean Squared Error: Calculated by taking the difference between the square of the difference between the"
          " actual value and the predicted value on a regression line. In short, we are looking for the lowest overall "
          "MSE for our selected model. ")
-st.write("- MAE: Used to calculate the mean of the absolute difference between the actual value and the predicted "
+st.write("- MAE: Calculated by taking the mean of the absolute difference between the actual value and the predicted "
          "value. This is different to the MSE as the MSE provides a greater weight to larger differences. Regardless,"
          " we are also looking for the lowest MAE value.")
 st.write("- R2: Used to calculate how well a model predicts an outcome. We are looking for the highest value.")
