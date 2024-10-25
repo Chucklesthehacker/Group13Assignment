@@ -68,21 +68,9 @@ def convert_variables(data, bool_v):
     data = data.drop_duplicates()
     return data
 
-# I couldn't find how to plot multiple bar charts, so have taken the example provided
-def multiple_bars(data, variables):
-
-    # Generating multiple subplots
-    fig, subPlot = plt.subplots(nrows=1, ncols=len(variables), figsize=(20, 5))
-    fig.suptitle('Bar charts of: ' + str(variables))
-
-    for colName, plotNumber in zip(variables, range(len(variables))):
-        data.groupby(colName).size().plot(kind='bar', ax=subPlot[plotNumber])
-
-    st.pyplot(fig, use_container_width=True)
-
-
 
 st.title('Using Machine Learning to calculate the closing price of gold')
+st.divider()
 
 
 st.write('# Step 1: Reading data with Python')
@@ -237,8 +225,52 @@ st.write("From the basic analysis performed in the previous step, we identified 
 st.write(bool_variables)
 st.write("We will use bar charts to show how the data is distributed in each variable")
 
-# Calling the function defined at the start to plot the bar charts
-multiple_bars(data=cleaned_data, variables=bool_variables)
+
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    fig, ax = plt.subplots(figsize=(2, 2))
+    ax.bar(cleaned_data[bool_variables[0]],height=(len(cleaned_data[bool_variables[0]])))
+    ax.set_title(f"Distribution of {bool_variables[0]}")
+    st.pyplot(fig, use_container_width=True)
+
+    fig, ax = plt.subplots(figsize=(2, 2))
+    ax.bar(cleaned_data[bool_variables[1]],height=(len(cleaned_data[bool_variables[1]])))
+    ax.set_title(f"Distribution of {bool_variables[1]}")
+    st.pyplot(fig, use_container_width=True)
+
+with col2:
+    fig, ax = plt.subplots(figsize=(2, 2))
+    ax.bar(cleaned_data[bool_variables[2]],height=(len(cleaned_data[bool_variables[2]])))
+    ax.set_title(f"Distribution of {bool_variables[2]}")
+    st.pyplot(fig,use_container_width=True)
+
+    fig, ax = plt.subplots(figsize=(2, 2))
+    ax.bar(cleaned_data[bool_variables[3]],height=(len(cleaned_data[bool_variables[3]])))
+    ax.set_title(f"Distribution of {bool_variables[3]}")
+    st.pyplot(fig, use_container_width=True)
+
+with col3:
+    fig, ax = plt.subplots(figsize=(2, 2))
+    ax.bar(cleaned_data[bool_variables[4]],height=(len(cleaned_data[bool_variables[4]])))
+    ax.set_title(f"Distribution of {bool_variables[4]}")
+    st.pyplot(fig, use_container_width=True)
+
+    fig, ax = plt.subplots(figsize=(2, 2))
+    ax.bar(cleaned_data_copy[bool_variables[5]],height=(len(cleaned_data_copy[bool_variables[5]])))
+    ax.set_title(f"Distribution of {bool_variables[5]}")
+    st.pyplot(fig, use_container_width=True)
+
+with col4:
+    fig, ax = plt.subplots(figsize=(2, 2))
+    ax.bar(cleaned_data_copy[bool_variables[6]],height=(len(cleaned_data_copy[bool_variables[6]])))
+    ax.set_title(f"Distribution of {bool_variables[6]}")
+    st.pyplot(fig, use_container_width=True)
+
+    fig, ax = plt.subplots(figsize=(2, 2))
+    ax.bar(cleaned_data_copy[bool_variables[7]],height=(len(cleaned_data_copy[bool_variables[7]])))
+    ax.set_title(f"Distribution of {bool_variables[7]}")
+    st.pyplot(fig, use_container_width=True)
 
 st.write("### Observations from Step 5: ")
 st.write("The bar charts above show the frequency of each unique value in the variable. Ideally, each value within "
@@ -260,11 +292,10 @@ for col in continuous_variables.columns:
 st.write(f"From the basic EDA performed earlier, we know there are {col_count} continuous predictor"
          f" variables in the dataset ")
 st.write("Given the volume of continuous predictor values, we will now make a decision on which variables to keep "
-         "to perform further analysis on, and visualize these")
+         "to perform further visual analysis on, we will keep the other variables for tabular assessment throughout.")
 st.write("As we are looking to predict the price of gold, we will keep the 4 variables associated with gold ,'Open', "
-         "'High', 'Low' and 'Adj Close'. Additionally, we will keep the variables relating to other precious metals, "
-         "as they can potentially help the ML model in predicting gold price. We will also keep the categorical"
-         " variables from the previous step in case we need them later on.")
+         "'High', 'Low' and 'Adj Close'. Additionally, as there are only 8 categorical predictor variables, we will"
+         " use all of these for visual analysis.")
 
 variables_to_keep = ["PLT_Open", "PLT_Price","PLT_Low", "PLT_High","PLD_Open", "PLD_High", "PLD_Low",
                      "PLD_Price", "RHO_PRICE","Open", "High", "Low", "Adj Close"]
@@ -373,11 +404,12 @@ st.write("This step is to identify the number of outliers contained in each vari
          "with the visualisation in the previous step to assess whether to remove or keep outliers present "
          "in the dataset")
 
-Q1 = continuous_variables.quantile(0.25)
-Q3 = continuous_variables.quantile(0.75)
+continuous_variables_copy = cleaned_data_copy.select_dtypes(include=['number'])
+Q1 = continuous_variables_copy.quantile(0.25)
+Q3 = continuous_variables_copy.quantile(0.75)
 IQR = Q3 - Q1
 
-outliers = (continuous_variables < (Q1 - 1.5 * IQR)) | (continuous_variables > (Q3 + 1.5 * IQR))
+outliers = (continuous_variables_copy < (Q1 - 1.5 * IQR)) | (continuous_variables_copy > (Q3 + 1.5 * IQR))
 
 outliers_count = outliers.sum()
 
@@ -389,11 +421,15 @@ st.dataframe(dtype_df_outliers, use_container_width=True)
 st.write("### Observations of Step 7:")
 st.write("After visualising the distribution in the previous step, and assessing how many outliers were present in the",
          "variables relating to gold price, we have elected to maintain the distribution as is, as it will not skew"
-         " the predicted value too much in later analysis.")
+         " the predicted value too much in later analysis. This is included for variables not visualised as it can be"
+         "assumed that the distribution is similar to that of variables assessed due to the results of the correlation "
+         "later in the analysis")
 st.write("As stated in the previous step, we have assessed the outlier count for RHO_PRICE, and given it is nearly "
          "as much as that of gold, without having the favourable distribution of gold, we have elected to remove it.")
 
 continuous_variables = continuous_variables.drop(columns=["RHO_PRICE"])
+continuous_variables_copy = continuous_variables_copy.drop(columns=["RHO_PRICE"])
+
 cleaned_data = cleaned_data.drop(columns=["RHO_PRICE"])
 st.divider()
 
@@ -405,12 +441,12 @@ st.write("For this step, we will examine how many missing values are present in 
          "type of variable, we will look to overwrite the missing value with either the median value for continuous "
          "variables or the mode value for categorical variables.")
 
-dtype_dt_missing = pd.DataFrame(cleaned_data.isnull().sum(), columns=["Missing Values"]).reset_index()
+dtype_dt_missing = pd.DataFrame(cleaned_data_copy.isnull().sum(), columns=["Missing Values"]).reset_index()
 dtype_df_missing = dtype_dt_missing.rename(columns={"index": "Missing Values"})
 st.dataframe(dtype_dt_missing, use_container_width=True)
 
 st.write("### Observations of Step 8:")
-st.write("For the sample data set being used for this model there are no missing values, the data set passed on to the "
+st.write("For the sample dataset being used for this model there are no missing values, the data set passed on to the "
          "machine learning models is unchanged")
 st.divider()
 
@@ -448,7 +484,7 @@ for predictor in variables_to_visualise:
 st.write("Looking at the above scatter plots, we can see a clear trend with the variables relating to gold and "
          "platinum.")
 st.write("The relationship between the target and palladium predictor variables however, don't clearly show any trend "
-         "at all, so we will have a closer look at the correlation. At this step, we will reintroduce the other "
+         "at all, so we will have a closer look at the correlation. From here, we will reintroduce the other "
          "variables that were removed to investigate their Pearson's correlation coefficient to see whether "
          "we should include them in final analysis. To save space on the correlation heatmap, we will only include"
          " the other variables in the tables below.")
