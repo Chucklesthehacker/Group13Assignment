@@ -294,11 +294,11 @@ def clean_dataset(data):
     if not categorical_columns.empty:
         selected_categorical = st.multiselect("Select categorical variables for ANOVA: ", categorical_columns.columns)
         if selected_categorical:
-            if pd.api.types.is_numeric_dtype(cleaned_data[target_variable]):
+            if pd.api.types.is_numeric_dtype(cleaned_data['Adj Close']):
                 anova_results = []
 
                 for cat_col in selected_categorical:
-                    anova_groups = cleaned_data.groupby(cat_col)[target_variable].apply(list)
+                    anova_groups = cleaned_data.groupby(cat_col)[].apply(list)
                     f_val, p_val = stats.f_oneway(*anova_groups)
 
                     anova_results.append({"Categorical Variable": cat_col, "F-Value": f_val, "P-Value": p_val})
