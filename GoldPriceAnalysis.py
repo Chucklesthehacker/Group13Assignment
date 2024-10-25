@@ -1,12 +1,17 @@
-import streamlit
+'''
+*******************************
+Author:U3254233, U3083836, U3258000
+u123456 Assessment 1_Program1_(a) 10/ 03/2024
+Programming: Assignment 3 Programming Project
+*******************************
+'''
+
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import numpy as np
 from scipy import stats
 import io
-
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
@@ -26,16 +31,20 @@ high = 0.9
 low = 0.75
 
 bool_variables = ['EU_Trend', 'OF_Trend', 'OS_Trend', 'SF_Trend', 'USB_Trend',
-                      'PLT_Trend', 'PLD_Trend', 'USDI_Trend']
+                  'PLT_Trend', 'PLD_Trend', 'USDI_Trend']
 
 gold_data = pd.read_csv('FINAL_USO.csv')
+#// Dataset taken from kaggle
+# //S. Manu, “Gold Price Prediction Dataset,” Kaggle, 2021. [Online].
+# //Available: https://www.kaggle.com/datasets/sid321axn/gold-price-prediction-dataset. [Accessed 1 October 2024].
 
 # Downloaded the strong correlation DF from streamlit and reading here to create a DF for later
 strong_corr_df = pd.read_csv('high_corr.csv')
 
+
 # Creating a Cache to store the models to improve performance
 @st.cache_resource
-def train_models(X_train_scaled, y_train):
+def train_models(xtrain_scaled, y_train):
     models = {
         "Linear Regression": LinearRegression(),
         "Decision Tree Regressor": DecisionTreeRegressor(),
@@ -45,17 +54,17 @@ def train_models(X_train_scaled, y_train):
     }
     trained_models = {}
     for name, model in models.items():
-        model.fit(X_train_scaled, y_train)
+        model.fit(xtrain_scaled, y_train)
         trained_models[name] = model
     return trained_models
 
 
 @st.cache_resource
-def scale_data(X_train, X_test):
+def scale_data(x_train, x_test):
     scaler = StandardScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
-    return scaler, X_train_scaled, X_test_scaled
+    x_train_scaled = scaler.fit_transform(x_train)
+    x_test_scaled = scaler.transform(x_test)
+    return scaler, x_train_scaled, x_test_scaled
 
 
 # Creating a function to clean our dataset
@@ -63,13 +72,13 @@ def convert_variables(data, bool_v):
     for variable in bool_v:
         data[variable] = data[variable].astype('bool')
 
-    if 'Date' in data.columns: # using an if so to not throw exception if date column doesn't exist
+    if 'Date' in data.columns:  # using an if so to not throw exception if date column doesn't exist
         data = data.set_index('Date')
     data = data.drop_duplicates()
     return data
 
 
-st.title('Using Machine Learning to calculate the closing price of gold')
+st.title('Using Machine Learning to Calculate the Closing Price of Gold')
 st.divider()
 
 
@@ -95,13 +104,14 @@ with col2:
     clean_dtype_df = clean_dtype_df.rename(columns={"index": "Column Name"})
     st.dataframe(clean_dtype_df)
 
-st.write('List of variables in dataset:', gold_data.columns.tolist())
+st.write('List of variables in the dataset:', gold_data.columns.tolist())
 
 
 st.write('### Key observations after step 1:')
 
 st.write('The sample data we have chosen contains 1718 rows of data for 81 columns (variables), including the open, '
-         'close, high, low, and volume of Gold, Silver, Platinum, Rhodium and Palladium stock prices.')
+         'close, high, low, and volume of Gold, Silver, Platinum, Rhodium and Palladium stock prices, alongside the '
+         'market values of other stock indices.')
 st.write('Of the variables within the dataset, the key ones are outlined below:')
 st.write('- Date: the date the stock price of each record was collected')
 st.write('- High: the highest price of gold for a specific day')
@@ -115,6 +125,7 @@ st.write('As part of cleaning the data, duplicate rows were removed. '
          'It is noted that the dataset does not contain any repeated rows.')
 st.divider()
 
+
 st.write('# Step 2: Problem Statement Definition')
 st.write('The purpose of the model is to compare our target variables (close price and adjusted close price) '
          'to other variables within the dataset, with the intention of identifying correlations for the purpose of '
@@ -124,6 +135,8 @@ st.divider()
 
 st.write('# Step 3: Visualizing the target variable and its distribution')
 
+st.write("In this step, we will visualise the distribution of the target variable(s) using histograms, and assess their"
+         " suitability based on their bell curve.")
 st.write("If the target variable’s distribution is skewed, then the predictive model will lead to poor results.")
 st.write("To ensure accurate results, a bell curve is ideal, however a positive or "
          "negative skew are fine if not significant.")
@@ -148,7 +161,7 @@ st.write('### Observations from Step 3:')
 
 st.write('Having a look at our histograms of our potential target variables we can see that they are both positively '
          'skewed, however there is enough of a bell curve to ensure accurate results. Additionally, it appears they are'
-         'identical so we will asses their correlation.')
+         ' identical so we will asses their correlation.')
 st.write('If it is 1, we can assume the variables are identical and can exclude one from further analysis')
 st.write('Correlation of Close and AdjClose: ', cleaned_data['Close'].corr(cleaned_data['Adj Close']))
 st.write('Given the correlation is 1, we will exclude Close from further analysis')
@@ -166,7 +179,7 @@ st.write("This step is performed to gauge the overall shape of the data, i.e. th
          "columns present in the dataset.")
 st.write('This step will begin the process of identifying whether particular columns are kept, and provides a mechanism'
          ' for identifying data that is less impactful on the outcome.')
-st.write('To perform this, there are 4 pandas methods/attributes used to analyze the data,'
+st.write('To perform this, there are 4 pandas methods/attributes used to analyse the data,'
          ' these are describe(), dtypes, info() and nunuique()')
 st.write('- nunique(): this method is used to display the unique values within each column, '
          'the more unique values within a column the more useful for data analysis. '
@@ -205,6 +218,10 @@ cleaned_data_info = buffer.getvalue()
 st.write("### Description of Dataset (info() method)")
 st.text(cleaned_data_info)
 
+# // Code snippet taken from streamlit discussion board
+# //snehankekre, “Direct the output of df.info() to web page,” Streamlit, July 2021. [Online].
+# //Available: https://discuss.streamlit.io/t/direct-the-output-of-df-info-to-web-page/14894. [Accessed 21 October 2024].
+
 st.write("### Observations from Step 4: ")
 st.write("From the output of these methods and attributes, we can ascertain that there are:")
 st.write("- 8 boolean variables, and")
@@ -229,46 +246,46 @@ st.write("We will use bar charts to show how the data is distributed in each var
 col1, col2, col3, col4 = st.columns(4)
 
 with col1:
-    fig, ax = plt.subplots(figsize=(2, 2))
-    ax.bar(cleaned_data[bool_variables[0]],height=(len(cleaned_data[bool_variables[0]])))
+    fig, ax = plt.subplots(figsize=(3, 3))
+    ax.bar(cleaned_data[bool_variables[0]], height=(len(cleaned_data[bool_variables[0]])))
     ax.set_title(f"Distribution of {bool_variables[0]}")
     st.pyplot(fig, use_container_width=True)
 
-    fig, ax = plt.subplots(figsize=(2, 2))
-    ax.bar(cleaned_data[bool_variables[1]],height=(len(cleaned_data[bool_variables[1]])))
+    fig, ax = plt.subplots(figsize=(3, 3))
+    ax.bar(cleaned_data[bool_variables[1]], height=(len(cleaned_data[bool_variables[1]])))
     ax.set_title(f"Distribution of {bool_variables[1]}")
     st.pyplot(fig, use_container_width=True)
 
 with col2:
-    fig, ax = plt.subplots(figsize=(2, 2))
-    ax.bar(cleaned_data[bool_variables[2]],height=(len(cleaned_data[bool_variables[2]])))
+    fig, ax = plt.subplots(figsize=(3, 3))
+    ax.bar(cleaned_data[bool_variables[2]], height=(len(cleaned_data[bool_variables[2]])))
     ax.set_title(f"Distribution of {bool_variables[2]}")
-    st.pyplot(fig,use_container_width=True)
+    st.pyplot(fig, use_container_width=True)
 
-    fig, ax = plt.subplots(figsize=(2, 2))
-    ax.bar(cleaned_data[bool_variables[3]],height=(len(cleaned_data[bool_variables[3]])))
+    fig, ax = plt.subplots(figsize=(3, 3))
+    ax.bar(cleaned_data[bool_variables[3]], height=(len(cleaned_data[bool_variables[3]])))
     ax.set_title(f"Distribution of {bool_variables[3]}")
     st.pyplot(fig, use_container_width=True)
 
 with col3:
-    fig, ax = plt.subplots(figsize=(2, 2))
-    ax.bar(cleaned_data[bool_variables[4]],height=(len(cleaned_data[bool_variables[4]])))
+    fig, ax = plt.subplots(figsize=(3, 3))
+    ax.bar(cleaned_data[bool_variables[4]], height=(len(cleaned_data[bool_variables[4]])))
     ax.set_title(f"Distribution of {bool_variables[4]}")
     st.pyplot(fig, use_container_width=True)
 
-    fig, ax = plt.subplots(figsize=(2, 2))
-    ax.bar(cleaned_data_copy[bool_variables[5]],height=(len(cleaned_data_copy[bool_variables[5]])))
+    fig, ax = plt.subplots(figsize=(3, 3))
+    ax.bar(cleaned_data_copy[bool_variables[5]], height=(len(cleaned_data_copy[bool_variables[5]])))
     ax.set_title(f"Distribution of {bool_variables[5]}")
     st.pyplot(fig, use_container_width=True)
 
 with col4:
-    fig, ax = plt.subplots(figsize=(2, 2))
-    ax.bar(cleaned_data_copy[bool_variables[6]],height=(len(cleaned_data_copy[bool_variables[6]])))
+    fig, ax = plt.subplots(figsize=(3, 3))
+    ax.bar(cleaned_data_copy[bool_variables[6]], height=(len(cleaned_data_copy[bool_variables[6]])))
     ax.set_title(f"Distribution of {bool_variables[6]}")
     st.pyplot(fig, use_container_width=True)
 
-    fig, ax = plt.subplots(figsize=(2, 2))
-    ax.bar(cleaned_data_copy[bool_variables[7]],height=(len(cleaned_data_copy[bool_variables[7]])))
+    fig, ax = plt.subplots(figsize=(3, 3))
+    ax.bar(cleaned_data_copy[bool_variables[7]], height=(len(cleaned_data_copy[bool_variables[7]])))
     ax.set_title(f"Distribution of {bool_variables[7]}")
     st.pyplot(fig, use_container_width=True)
 
@@ -288,7 +305,7 @@ continuous_variables = continuous_variables.drop(columns=['Adj Close'])
 col_count = 0
 
 for col in continuous_variables.columns:
-    col_count +=1
+    col_count += 1
 st.write(f"From the basic EDA performed earlier, we know there are {col_count} continuous predictor"
          f" variables in the dataset ")
 st.write("Given the volume of continuous predictor values, we will now make a decision on which variables to keep "
@@ -297,8 +314,8 @@ st.write("As we are looking to predict the price of gold, we will keep the 4 var
          "'High', 'Low' and 'Adj Close'. Additionally, as there are only 8 categorical predictor variables, we will"
          " use all of these for visual analysis.")
 
-variables_to_keep = ["PLT_Open", "PLT_Price","PLT_Low", "PLT_High","PLD_Open", "PLD_High", "PLD_Low",
-                     "PLD_Price", "RHO_PRICE","Open", "High", "Low", "Adj Close"]
+variables_to_keep = ["PLT_Open", "PLT_Price", "PLT_Low", "PLT_High", "PLD_Open", "PLD_High", "PLD_Low",
+                     "PLD_Price", "RHO_PRICE", "Open", "High", "Low", "Adj Close"]
 for variable in bool_variables:
     variables_to_keep.append(variable)
 
@@ -309,9 +326,9 @@ for col in cleaned_data.columns:
 for col in continuous_variables.columns:
     if col not in variables_to_keep:
         continuous_variables = continuous_variables.drop(columns=[col])
-st.write("Continuous Predictor variables kept for analysis:",continuous_variables.columns.tolist())
+st.write("Continuous Predictor variables kept for analysis:", continuous_variables.columns.tolist())
 
-fig, ax = plt.subplots(ncols=3, figsize=(20,5))
+fig, ax = plt.subplots(ncols=3, figsize=(20, 5))
 
 ax[0].hist(cleaned_data['Open'], bins=30)
 ax[0].set_title('Distribution of High')
@@ -329,7 +346,7 @@ ax[2].set_ylabel('Frequency')
 ax[2].set_xlabel('Open')
 st.pyplot(fig)
 
-fig, ax = plt.subplots(ncols=4, figsize=(20,5))
+fig, ax = plt.subplots(ncols=4, figsize=(20, 5))
 
 ax[0].hist(cleaned_data['PLT_Open'], bins=30)
 ax[0].set_title('Distribution of PLT_Open')
@@ -353,7 +370,7 @@ ax[3].set_xlabel('PLT_Price')
 
 st.pyplot(fig)
 
-fig, ax = plt.subplots(ncols=4, figsize=(20,5))
+fig, ax = plt.subplots(ncols=4, figsize=(20, 5))
 
 ax[0].hist(cleaned_data['PLD_Price'], bins=30)
 ax[0].set_title('Distribution of PLD_Price')
@@ -377,7 +394,7 @@ ax[3].set_xlabel('PLD_Low')
 
 st.pyplot(fig)
 
-fig, ax = plt.subplots(figsize=(10,5))
+fig, ax = plt.subplots(figsize=(10, 5))
 
 ax.hist(cleaned_data['RHO_PRICE'], bins=30)
 ax.set_title('Distribution of RHO_Price')
@@ -455,7 +472,7 @@ st.write("# Step 9: Feature Selection")
 st.write("For this step we will visualise the relationship between the continuous predictor variables using scatter "
          "plots, and the categorical variables using box plots.")
 
-variables_to_visualise=[]
+variables_to_visualise = []
 for variable in continuous_variables:
     if variable in variables_to_keep:
         variables_to_visualise.append(variable)
@@ -536,7 +553,7 @@ st.write("So that we can ensure we are conducting thorough investigation into po
 for predictor in strong_cor_list:
     if numeric_variables[predictor].dtype == ('float64' or 'int64'):
         fig, ax = plt.subplots(figsize=(20, 12))
-        sns.regplot(numeric_variables, x=predictor, y='Adj Close',order=2)
+        sns.regplot(numeric_variables, x=predictor, y='Adj Close', order=2)
         plt.title(f"{predictor} vs Adj Close with estimated regression")
         st.pyplot(fig)
 
@@ -546,7 +563,7 @@ st.write('In this section we will visualise the correlation of the target variab
 
 for cat_col in bool_variables:
     fig, ax = plt.subplots(figsize=(20, 6))
-    sns.boxplot(x=cat_col,y='Adj Close', data=cleaned_data)
+    sns.boxplot(x=cat_col, y='Adj Close', data=cleaned_data)
     ax.set_title(f"{cat_col} vs Adj Close")
     st.pyplot(fig)
 
@@ -585,8 +602,8 @@ st.write("From the visualisation of the correlation between the continuous predi
          " we have selected only the variables with strong correlation (above 0.9 Pearson correlation index) to pass "
          "on to the machine learning models.")
 st.write("Upon analysis of the correlation matrix, it appears that we chose the wrong variables to compare the price of"
-         " gold to, as platinum falls within the mid range correlation. The variables with a high correlation value that"
-         " we will use later are:", strong_cor_list)
+         " gold to, as platinum falls within the mid range correlation. The variables with a high correlation value "
+         "that we will use later are:", strong_cor_list)
 st.write("Of the categorical predictor variables, while the box charts did not provide useful information regarding "
          "the correlation to the target variable, the ANOVA test results show that there is enough evidence to reject "
          "the null hypothesis in regard to some of the categorical variables. To this end, we will include "
@@ -647,7 +664,7 @@ x = cleaned_data_copy[final_predictor_variables]
 y = cleaned_data_copy['Adj Close']
 
 # We'll arbitrarily choose a random_state to ensure results are consistent upon repeat.
-x_train, x_test, y_train, y_test = train_test_split(x,y,test_size=test_size, random_state=42)
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=test_size, random_state=42)
 
 
 scaler, x_train_scaled, x_test_scaled = scale_data(x_train, x_test)
@@ -680,8 +697,8 @@ st.write("In order to do this, we will perform a number of tests on the data usi
 st.write("- Mean Squared Error: Used to calculate the difference between the square of the difference between the"
          " actual value and the predicted value on a regression line. In short, we are looking for the lowest overall "
          "MSE for our selected model. ")
-st.write("- MAE: Used to calculate the mean of the absolute difference between the actual value and the predicted value."
-         "This is different to the MSE as the MSE provides a greater weight to larger differences. Regardless,"
+st.write("- MAE: Used to calculate the mean of the absolute difference between the actual value and the predicted "
+         "value. This is different to the MSE as the MSE provides a greater weight to larger differences. Regardless,"
          " we are also looking for the lowest MAE value.")
 st.write("- R2: Used to calculate how well a model predicts an outcome. We are looking for the highest value.")
 
@@ -708,10 +725,10 @@ styled_df = performance_df.style.format(precision=5)\
             .background_gradient(subset=['MAE'], cmap="Oranges", low=0, high=1) \
             .set_properties(**{'text-align': 'center'}) \
             .set_table_styles([{
-            'selector': 'th',
-            'props': [('font-size', '14px'), ('text-align', 'center'), ('color', '#ffffff'),
-                      ('background-color', '#404040')]
-            }])
+                                'selector': 'th',
+                                'props': [('font-size', '14px'), ('text-align', 'center'), ('color', '#ffffff'),
+                                          ('background-color', '#404040')]
+                                }])
 st.write("#### Model performance Table:")
 st.dataframe(styled_df, use_container_width=True)
 
@@ -721,7 +738,7 @@ r2_values = [model_performance[model]["R2 Score"] for model in model_names]
 mae_values = [model_performance[model]["MAE"] for model in model_names]
 
 # Creating a bar plot to compare MSE, R2, and MAE across models
-fig, ax = plt.subplots(3,1, figsize=(14, 10))
+fig, ax = plt.subplots(3, 1, figsize=(14, 10))
 
 # MSE Comparison
 ax[0].bar(model_names, mse_values, color="purple")
@@ -737,7 +754,6 @@ ax[2].bar(model_names, mae_values, color="orange")
 ax[2].set_title('Model Comparison: MAE (Mean Absolute Error)')
 ax[2].set_ylabel('MAE')
 
-#display
 plt.tight_layout()
 st.pyplot(fig)
 
@@ -765,7 +781,7 @@ if model_performance:
 
     model_filename = 'best_model.pkl'
     joblib.dump(best_model, model_filename)
-    st.write(f"###### Model '{best_model_MSE}' has been retrained and saved as '{model_filename}'" )
+    st.write(f"###### Model '{best_model_MSE}' has been retrained and saved as '{model_filename}'")
 else:
     st.write("No model performance results available. Please ensure models were trained successfully")
 
@@ -787,7 +803,8 @@ try:
     st.write("##### Boolean Variables:")
     st.caption("Enter 1 for True and 0 for False")
     for variable in best_categorical:
-        user_input_values[variable] = st.number_input(f"Enter the value for {variable}", min_value=0, max_value=1,step=1)
+        user_input_values[variable] = st.number_input(f"Enter the value for {variable}",
+                                                      min_value=0, max_value=1, step=1)
     st.write("##### Continuous Variables:")
     for variable in strong_cor_list:
         user_input_values[variable] = st.number_input(f"Enter the value for {variable}",
