@@ -77,6 +77,8 @@ def multiple_bars(data, variables):
 
     st.pyplot(fig, use_container_width=True)
 
+
+
 st.title('Using Machine Learning to calculate the closing price of gold')
 
 
@@ -84,9 +86,11 @@ st.write('# Step 1: Reading data with Python')
 
 st.write('The first step is to load the dataset into Python, converting the columns to '
          'suitable datatypes and displaying a sample of the data, alongside what datatype each column is converted to.')
-cleaned_columns = convert_variables(gold_data, bool_variables)
+
+cleaned_data = convert_variables(gold_data, bool_variables)
+
 st.write('#### Shape before cleaning', gold_data.shape)
-st.write('#### Shape after cleaning', cleaned_columns.shape)
+st.write('#### Shape after cleaning', cleaned_data.shape)
 
 
 col1, col2 = st.columns(2)
@@ -95,7 +99,7 @@ with col1:
     unclean_dtype_df = unclean_dtype_df.rename(columns={"index": "Column Name"})
     st.dataframe(unclean_dtype_df)
 with col2:
-    clean_dtype_df = pd.DataFrame(cleaned_columns.dtypes, columns=["data type"]).reset_index()
+    clean_dtype_df = pd.DataFrame(cleaned_data.dtypes, columns=["data type"]).reset_index()
     clean_dtype_df = clean_dtype_df.rename(columns={"index": "Column Name"})
     st.dataframe(clean_dtype_df)
 
@@ -135,12 +139,12 @@ st.write("As we have two potential target variables, Close and AdjClose, we will
 
 
 fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(8, 3))
-ax[0].hist(cleaned_columns['Close'], bins=50, edgecolor='black',alpha=0.5)
+ax[0].hist(cleaned_data['Close'], bins=50, edgecolor='black', alpha=0.5)
 ax[0].set_title("Distribution of Close")
 ax[0].set_xlabel("Close")
 ax[0].set_ylabel("Frequency")
 
-ax[1].hist(cleaned_columns['Adj Close'], bins=50, edgecolor='black',alpha=0.5)
+ax[1].hist(cleaned_data['Adj Close'], bins=50, edgecolor='black', alpha=0.5)
 ax[1].set_title("Distribution of Adj Close")
 ax[1].set_xlabel("Adj Close")
 ax[1].set_ylabel("Frequency")
@@ -154,8 +158,11 @@ st.write('Having a look at our histograms of our potential target variables we c
          'skewed, however there is enough of a bell curve to ensure accurate results. Additionally, it appears they are'
          'identical so we will asses their correlation.')
 st.write('If it is 1, we can assume the variables are identical and can exclude one from further analysis')
-st.write('Correlation of Close and AdjClose: ',cleaned_columns['Close'].corr(cleaned_columns['Adj Close']))
+st.write('Correlation of Close and AdjClose: ', cleaned_data['Close'].corr(cleaned_data['Adj Close']))
 st.write('Given the correlation is 1, we will exclude Close from further analysis')
+cleaned_data = cleaned_data.drop(columns=['Close'])
+target_variable = cleaned_data['Adj Close']
+predictor_variables = cleaned_data.drop(columns=['Adj Close'])
 st.divider()
 
 
@@ -185,21 +192,21 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.write(f"### Data Types: (dtypes attribute)")
-    dtype_df = pd.DataFrame(cleaned_columns.dtypes, columns=["data type"]).reset_index()
+    dtype_df = pd.DataFrame(cleaned_data.dtypes, columns=["data type"]).reset_index()
     dtype_df = dtype_df.rename(columns={"index": "Column Name"})
 
     st.dataframe(dtype_df, use_container_width=True)
 
 with col2:
     st.write("### Unique Values (nunique() method)")
-    st.dataframe(cleaned_columns.nunique(), use_container_width=True)
+    st.dataframe(cleaned_data.nunique(), use_container_width=True)
 
 st.write("### Summary Statistics: (describe() method)")
-st.dataframe(cleaned_columns.describe(), use_container_width=True)
+st.dataframe(cleaned_data.describe(), use_container_width=True)
 
 # Creating a buffer to pipe the output of info() method to show in streamlit
 buffer = io.StringIO()
-cleaned_columns.info(buf=buffer)
+cleaned_data.info(buf=buffer)
 cleaned_data_info = buffer.getvalue()
 st.write("### Description of Dataset (info() method)")
 st.text(cleaned_data_info)
@@ -216,7 +223,7 @@ st.write("From the nunique() method, we can see that there is a large variation 
 st.divider()
 
 
-st.write("# Step 5 Visual EDA")
+st.write("# Step 5 Visual EDA of Categorical Predictor Variables")
 st.write("In this step we will visualize the distribution of all categorical predictor variables. "
          "That is any variable that has less than 20 values, and has repetition of "
          "values so that data can be grouped by the unique values")
@@ -225,7 +232,7 @@ st.write(bool_variables)
 st.write("We will use bar charts to show how the data is distributed in each variable")
 
 # Calling the function defined at the start to plot the bar charts
-multiple_bars(data=cleaned_columns, variables=bool_variables)
+multiple_bars(data=cleaned_data, variables=bool_variables)
 
 st.write("### Observations from Step 5: ")
 st.write("The bar charts above show the frequency of each unique value in the variable. Ideally, each value within "
@@ -233,4 +240,138 @@ st.write("The bar charts above show the frequency of each unique value in the va
 st.write("As shown, all 8 categorical predictor variables have an almost perfectly even distribution, as such we "
          "will be able to use them all for the ML regression algorithm to learn.")
 st.divider()
+
+
+st.write("# Step 6: Visual EDA of Continuous Predictor Variables")
+
+continuous_variables = cleaned_data.select_dtypes(include=["float64", 'int64'])
+continuous_variables = continuous_variables.drop(columns=['Adj Close'])
+
+col_count = 0
+
+for col in continuous_variables.columns:
+    col_count +=1
+st.write(f"From the basic EDA performed earlier, we know there are {col_count} continuous predictor"
+         f" variables in the dataset ")
+st.write("Given the volume of continuous predictor values, we will now make a decision on which variables to keep "
+         "to perform further analysis on, and visualize these")
+st.write("As we are looking to predict the price of gold, we will keep the 4 variables associated with gold ,'Open', "
+         "'High', 'Low' and 'Adj Close'. Additionally, we will keep the variables relating to other precious metals, "
+         "as they can potentially help the ML model in predicting gold price. We will also keep the categorical"
+         " variables from the previous step in case we need them later on.")
+
+variables_to_keep = ["PLT_Open", "PLT_Price","PLT_Low", "PLT_High","PLD_Open", "PLD_High", "PLD_Low", "PLD_Trend",
+                     "PLD_Price", "RHO_PRICE","Open", "High", "Low", "Adj Close", "OF_Trend", "OS_Trend", "SF_Trend",
+                     "USB_Trend","PLT_Trend", "USDI_Trend"]
+
+for col in cleaned_data.columns:
+    if col not in variables_to_keep:
+        cleaned_data = cleaned_data.drop(columns=[col])
+
+for col in continuous_variables.columns:
+    if col not in variables_to_keep:
+        continuous_variables = continuous_variables.drop(columns=[col])
+st.write(continuous_variables.columns)
+
+fig, ax = plt.subplots(ncols=3, figsize=(20,5))
+
+ax[0].hist(cleaned_data['Open'], bins=30)
+ax[0].set_title('Distribution of High')
+ax[0].set_ylabel('Frequency')
+ax[0].set_xlabel('High')
+
+ax[1].hist(cleaned_data['Low'], bins=30)
+ax[1].set_title('Distribution of Low')
+ax[1].set_ylabel('Frequency')
+ax[1].set_xlabel('Low')
+
+ax[2].hist(cleaned_data['Open'], bins=30)
+ax[2].set_title('Distribution of Open')
+ax[2].set_ylabel('Frequency')
+ax[2].set_xlabel('Open')
+st.pyplot(fig)
+
+fig, ax = plt.subplots(ncols=4, figsize=(20,5))
+
+ax[0].hist(cleaned_data['PLT_Open'], bins=30)
+ax[0].set_title('Distribution of PLT_Open')
+ax[0].set_ylabel('Frequency')
+ax[0].set_xlabel('PLT_Open')
+
+ax[1].hist(cleaned_data['PLT_High'], bins=30)
+ax[1].set_title('Distribution of PLT_High')
+ax[1].set_ylabel('Frequency')
+ax[1].set_xlabel('PLT_High')
+
+ax[2].hist(cleaned_data['PLT_Low'], bins=30)
+ax[2].set_title('Distribution of PLT_Low')
+ax[2].set_ylabel('Frequency')
+ax[2].set_xlabel('PLT_Low')
+
+ax[3].hist(cleaned_data['PLT_Price'], bins=30)
+ax[3].set_title('Distribution of PLT_Price')
+ax[3].set_ylabel('Frequency')
+ax[3].set_xlabel('PLT_Price')
+
+st.pyplot(fig)
+
+fig, ax = plt.subplots(ncols=4, figsize=(20,5))
+
+ax[0].hist(cleaned_data['PLD_Price'], bins=30)
+ax[0].set_title('Distribution of PLD_Price')
+ax[0].set_ylabel('Frequency')
+ax[0].set_xlabel('PLD_Price')
+
+ax[1].hist(cleaned_data['PLD_Open'], bins=30)
+ax[1].set_title('Distribution of PLD_Open')
+ax[1].set_ylabel('Frequency')
+ax[1].set_xlabel('PLD_Open')
+
+ax[2].hist(cleaned_data['PLD_High'], bins=30)
+ax[2].set_title('Distribution of PLD_High')
+ax[2].set_ylabel('Frequency')
+ax[2].set_xlabel('PLD_High')
+
+ax[3].hist(cleaned_data['PLD_Low'], bins=30)
+ax[3].set_title('Distribution of PLD_Low')
+ax[3].set_ylabel('Frequency')
+ax[3].set_xlabel('PLD_Low')
+
+st.pyplot(fig)
+
+fig, ax = plt.subplots(figsize=(10,5))
+
+ax.hist(cleaned_data['RHO_PRICE'], bins=30)
+ax.set_title('Distribution of RHO_Price')
+ax.set_ylabel('Frequency')
+ax.set_xlabel('RHO_PRICE')
+
+st.pyplot(fig)
+
+st.write("### Observations from Step 6: ")
+st.write("As shown in the histograms, the first three predictor variables are positively skewed. They have a decent "
+         "normal distribution, with a smaller secondary peak at higher values, and we can remove those outliers to "
+         "assist in the ML prediction later on in the analysis if it's required. ")
+st.write("The histograms for the varaibles relating to platinum ")
+st.divider()
+
+
+st.write("# Step 7: Outlier Analysis")
+st.write("This step is to identify the number of outliers contained in each variable. We can use this in conjunction "
+         "with the results from the previous step to make an assumption to the distribution of the continuous "
+         "variables not visualised.")
+
+Q1 = continuous_variables.quantile(0.25)
+Q3 = continuous_variables.quantile(0.75)
+IQR = Q3 - Q1
+
+outliers = (continuous_variables < (Q1 - 1.5 * IQR)) | (continuous_variables > (Q3 + 1.5 * IQR))
+
+outliers_count = outliers.sum()
+
+
+st.write("#### Number of outliers for each continuous predictor variable")
+dtype_df_outliers = pd.DataFrame(outliers_count, columns=["Number of Outliers"]).reset_index()
+dtype_df_outliers = dtype_df_outliers.rename(columns={"index": "Column Name"})
+st.dataframe(dtype_df_outliers, use_container_width=True)
 
