@@ -618,11 +618,10 @@ scaler, x_train_scaled, x_test_scaled = scale_data(x_train, x_test)
 st.divider()
 
 
-st.write("# Step 13: Selecting MLM to train on the data")
+st.write("# Step 13: Selecting MLMs to Train on the Data")
 st.write('For this step, we will investigate which MLM are available to us. From the sklearn library, we '
          'have access to a few models. Given the results from Step 9, and viewing the estimated regression, '
-         'there is no need for us to use a polynomial regression, so we will use the standard Linear Regression Model'
-         ' (LRM) as our LRM')
+         'there is no need for us to use a polynomial regression, so we will use the standard Linear Regression Model')
 st.write('To ensure we are selecting the best model, we wil also train 4 other models on the data and compare their '
          'results to determine the final model')
 st.write('The selected models we have chosen are:')
@@ -632,3 +631,141 @@ st.write('- Support Vector Regression (SVR): Typically used for classification t
          'regression models.')
 st.write('- Decision Tree Regression: A type of regression model that builds a decision tree to predict the target'
          ' variable')
+st.write('- K-Nearest Neighbors Regression: A type of regression model that predicts a new data-point by averaging the'
+         ' target values of the nearest actual data-points in the feature space')
+st.write('- Random Forest Regression: A model that combines decision trees to predict the target variable')
+st.divider()
+
+
+st.write("# Step 14: Selection of the Best Model")
+st.write("In this step, we will be selecting the best model to predict the target variable")
+st.write("In order to do this, we will perform a number of tests on the data using the selected models to see how "
+         "well they perform. The tests we will perform are: ")
+st.write("- Mean Squared Error: Used to calculate the difference between the square of the difference between the"
+         " actual value and the predicted value on a regression line. In short, we are looking for the lowest overall "
+         "MSE for our selected model. ")
+st.write("- MAE: Used to calculate the mean of the absolute difference between the actual value and the predicted value."
+         "This is different to the MSE as the MSE provides a greater weight to larger differences. Regardless,"
+         " we are also looking for the lowest MAE value.")
+st.write("- R2: Used to calculate how well a model predicts an outcome. We are looking for the highest value.")
+
+st.session_state.trained_models = train_models(x_train_scaled, y_train)
+
+trained_models = st.session_state.trained_models
+
+model_performance = {}
+for name, model in trained_models.items():
+    model.fit(x_train_scaled, y_train)
+    y_pred = model.predict(x_test_scaled)
+
+    mse = mean_squared_error(y_test, y_pred)
+    r2 = r2_score(y_test, y_pred)
+    mae = mean_absolute_error(y_test, y_pred)
+
+    model_performance[name] = {"MSE": mse, "R2 Score": r2, "MAE": mae}
+
+performance_df = pd.DataFrame(model_performance).T
+
+styled_df = performance_df.style.format(precision=5)\
+            .background_gradient(subset=['MSE'], cmap="Purples", low=0, high=1) \
+            .background_gradient(subset=['R2 Score'], cmap="Greens", low=0, high=1) \
+            .background_gradient(subset=['MAE'], cmap="Oranges", low=0, high=1) \
+            .set_properties(**{'text-align': 'center'}) \
+            .set_table_styles([{
+            'selector': 'th',
+            'props': [('font-size', '14px'), ('text-align', 'center'), ('color', '#ffffff'),
+                      ('background-color', '#404040')]
+            }])
+st.write("#### Model performance Table:")
+st.dataframe(styled_df, use_container_width=True)
+
+model_names = list(model_performance.keys())
+mse_values = [model_performance[model]["MSE"] for model in model_names]
+r2_values = [model_performance[model]["R2 Score"] for model in model_names]
+mae_values = [model_performance[model]["MAE"] for model in model_names]
+
+# Creating a bar plot to compare MSE, R2, and MAE across models
+fig, ax = plt.subplots(3,1, figsize=(14, 10))
+
+# MSE Comparison
+ax[0].bar(model_names, mse_values, color="purple")
+ax[0].set_title('Model Comparison: MSE (Mean Squared Error)')
+ax[0].set_ylabel('MSE')
+
+# R2 Score Comparison
+ax[1].bar(model_names, r2_values, color="green")
+ax[1].set_title('Model Comparison: R2 Score')
+ax[1].set_ylabel('R2 Score')
+
+ax[2].bar(model_names, mae_values, color="orange")
+ax[2].set_title('Model Comparison: MAE (Mean Absolute Error)')
+ax[2].set_ylabel('MAE')
+
+#display
+plt.tight_layout()
+st.pyplot(fig)
+
+st.write("### Observations from Step 14:")
+st.write("From the previous step we can see that across all metrics the Linear Regression Model performed best, "
+         "so we will be using it as our model for the final prediction.")
+st.divider()
+
+
+st.write("# Step 16: Deploying Best Model")
+st.write("In this step, we will be retraining the model on the entire dataset, and saving the model as a serialised "
+         "file to be stored anywhere.")
+st.write("Then we will implement a dynamic variable selector to enable the input of selector variable values to then "
+         "predict our final target variable value.")
+
+if model_performance:
+    best_model_MSE = min(model_performance, key=lambda x: model_performance[x]["MSE"])
+    best_model = trained_models[best_model_MSE]
+
+    x_combined_scaled = scaler.fit_transform(x)
+    best_model.fit(x_combined_scaled, y)
+
+    if 'best_model' not in st.session_state:
+        st.session_state.best_model = best_model
+
+    model_filename = 'best_model.pkl'
+    joblib.dump(best_model, model_filename)
+    st.write(f"###### Model '{best_model_MSE}' has been retrained and saved as '{model_filename}'" )
+else:
+    st.write("No model performance results available. Please ensure models were trained successfully")
+
+model_filename = 'best_model.pkl'
+
+st.write("Now that the model has been trained on the whole dataset and saved, we will now attempt to load the model "
+         "back into the program. ")
+
+try:
+    loaded_model = joblib.load(model_filename)
+    st.write(f"##### Model '{model_filename}' has been loaded successfully.'")
+
+    st.write("Now we will input our predictor variable values and predict the final value for Adj Close")
+
+    st.write("#### Provide the input values for prediction")
+
+    # Generate fields automatically based on final predictor variables chosen in previous steps.
+    user_input_values = {}
+    st.write("##### Boolean Variables:")
+    st.caption("Enter 1 for True and 0 for False")
+    for variable in best_categorical:
+        user_input_values[variable] = st.number_input(f"Enter the value for {variable}", min_value=0, max_value=1,step=1)
+    st.write("##### Continuous Variables:")
+    for variable in strong_cor_list:
+        user_input_values[variable] = st.number_input(f"Enter the value for {variable}",
+                                                      value=float(cleaned_data_copy[variable].mean()))
+
+    if st.button("Predict"):
+
+        user_input_df = pd.DataFrame([user_input_values])
+
+        scaled_user_input = scaler.transform(user_input_df)
+
+        predicted_target = loaded_model.predict(scaled_user_input)
+
+        st.write(f"# Predicted value for 'Adj Close': ${predicted_target[0]:.2f}")
+
+except FileNotFoundError:
+    st.write(f"Model '{model_filename}' not found. Please ensure it was saved correctly")
